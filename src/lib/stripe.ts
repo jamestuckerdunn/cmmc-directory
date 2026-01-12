@@ -14,10 +14,3 @@ export function getStripe(): Stripe {
   }
   return stripeInstance
 }
-
-// For backwards compatibility - lazy getter
-export const stripe = new Proxy({} as Stripe, {
-  get(_, prop) {
-    return getStripe()[prop as keyof Stripe]
-  },
-})
