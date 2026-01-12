@@ -1,8 +1,10 @@
 import Link from 'next/link'
 
+const linkClasses = "hover:text-white transition-colors focus:outline-none focus:underline focus:text-white"
+
 export function Footer() {
   return (
-    <footer className="bg-navy-900 text-white">
+    <footer className="bg-navy-900 text-white" role="contentinfo">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
@@ -14,25 +16,35 @@ export function Footer() {
 
           <div>
             <h4 className="font-semibold mb-4">Directory</h4>
-            <ul className="space-y-2 text-navy-200 text-sm">
-              <li><Link href="/directory" className="hover:text-white transition-colors">Search Companies</Link></li>
-              <li><Link href="/companies/new" className="hover:text-white transition-colors">Register Company</Link></li>
+            <ul className="space-y-2 text-navy-200 text-sm" role="list">
+              <li><Link href="/directory" className={linkClasses}>Search Companies</Link></li>
+              <li><Link href="/companies/new" className={linkClasses}>Register Company</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-navy-200 text-sm">
-              <li><a href="https://dodcio.defense.gov/cmmc/" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">About CMMC</a></li>
-              <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
+            <ul className="space-y-2 text-navy-200 text-sm" role="list">
+              <li>
+                <a
+                  href="https://dodcio.defense.gov/cmmc/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClasses}
+                >
+                  About CMMC
+                  <span className="sr-only"> (opens in new tab)</span>
+                </a>
+              </li>
+              <li><Link href="/faq" className={linkClasses}>FAQ</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-navy-200 text-sm">
-              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+            <ul className="space-y-2 text-navy-200 text-sm" role="list">
+              <li><Link href="/privacy" className={linkClasses}>Privacy Policy</Link></li>
+              <li><Link href="/terms" className={linkClasses}>Terms of Service</Link></li>
             </ul>
           </div>
         </div>
