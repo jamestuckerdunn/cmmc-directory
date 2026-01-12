@@ -7,19 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 
-function useClerkUserData() {
-  const isClerkConfigured = useClerkConfigured()
-  const clerkData = useUser()
-
-  if (!isClerkConfigured) {
-    return { user: null, isLoaded: true }
-  }
-  return clerkData
-}
-
-export default function SettingsPage() {
-  const isClerkConfigured = useClerkConfigured()
-  const { user, isLoaded } = useClerkUserData()
+function SettingsContent() {
+  const { user, isLoaded } = useUser()
   const { isSubscribed, openPortal, isLoading } = useSubscription()
 
   if (!isLoaded) {
@@ -28,20 +17,6 @@ export default function SettingsPage() {
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="h-32 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    )
-  }
-
-  // Show placeholder when Clerk is not configured
-  if (!isClerkConfigured) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-          <p className="mt-2 text-gray-600">
-            Authentication not configured. Please set up Clerk credentials.
-          </p>
         </div>
       </div>
     )
@@ -138,4 +113,27 @@ export default function SettingsPage() {
       </div>
     </div>
   )
+}
+
+function UnconfiguredPlaceholder() {
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+        <p className="mt-2 text-gray-600">
+          Authentication not configured. Please set up Clerk credentials.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export default function SettingsPage() {
+  const isClerkConfigured = useClerkConfigured()
+
+  if (!isClerkConfigured) {
+    return <UnconfiguredPlaceholder />
+  }
+
+  return <SettingsContent />
 }
