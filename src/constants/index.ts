@@ -1,4 +1,6 @@
-export const US_STATES: { value: string; label: string }[] = [
+import type { SelectOption } from '@/types'
+
+export const US_STATES: SelectOption[] = [
   { value: 'AL', label: 'Alabama' },
   { value: 'AK', label: 'Alaska' },
   { value: 'AZ', label: 'Arizona' },
@@ -52,19 +54,19 @@ export const US_STATES: { value: string; label: string }[] = [
   { value: 'DC', label: 'Washington D.C.' },
 ]
 
-export const CMMC_LEVELS: { value: string; label: string }[] = [
+export const CMMC_LEVELS: SelectOption[] = [
   { value: '1', label: 'Level 1 - Foundational' },
   { value: '2', label: 'Level 2 - Advanced' },
   { value: '3', label: 'Level 3 - Expert' },
 ]
 
-export const CMMC_LEVELS_DETAILED: { value: string; label: string }[] = [
+export const CMMC_LEVELS_DETAILED: SelectOption[] = [
   { value: '1', label: 'Level 1 - Foundational (15 practices, self-assessment)' },
   { value: '2', label: 'Level 2 - Advanced (110 practices, C3PAO assessment)' },
   { value: '3', label: 'Level 3 - Expert (110+ practices, DIBCAC assessment)' },
 ]
 
-export const ASSESSMENT_TYPES: { value: string; label: string }[] = [
+export const ASSESSMENT_TYPES: SelectOption[] = [
   { value: 'self', label: 'Self-Assessment' },
   { value: 'c3pao', label: 'C3PAO Assessment' },
   { value: 'dibcac', label: 'DIBCAC Assessment' },

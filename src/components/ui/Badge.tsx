@@ -1,8 +1,9 @@
 import { cn } from '@/lib/utils'
+import type { BadgeVariant } from '@/types'
 
 interface BadgeProps {
   children: React.ReactNode
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'level1' | 'level2' | 'level3'
+  variant?: BadgeVariant
   className?: string
 }
 
