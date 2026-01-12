@@ -3,6 +3,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Card } from '@/components/ui/Card'
 import { FAQPageJsonLd } from '@/components/seo/JsonLd'
+import { SUBSCRIPTION_PRICE, SUPPORT_EMAIL } from '@/constants'
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions',
@@ -13,18 +14,7 @@ export const metadata: Metadata = {
   },
 }
 
-// Flattened FAQ questions for JSON-LD
-const allFaqQuestions = [
-  { question: 'What is CMMC Directory?', answer: 'CMMC Directory is a comprehensive online platform that connects organizations seeking CMMC-certified defense contractors with verified, compliant companies. Our directory helps streamline the process of finding trusted partners in the defense industrial base.' },
-  { question: 'Who can use this directory?', answer: 'Any organization that needs to find CMMC-certified contractors can subscribe to access our directory. This includes prime contractors, government agencies, and organizations within the defense industrial base seeking compliant partners for their supply chain.' },
-  { question: 'How much does a subscription cost?', answer: 'Access to the CMMC Directory is $10 per month. This gives you unlimited access to search, filter, and view detailed information about all verified companies in our directory.' },
-  { question: 'How do I get my company listed?', answer: 'Simply create an account, subscribe to our service, and complete the company registration form with your CMMC certification details. Our team will verify your certification before your listing goes live.' },
-  { question: 'What is CMMC?', answer: 'The Cybersecurity Maturity Model Certification (CMMC) is a unified standard for implementing cybersecurity across the Defense Industrial Base (DIB). It was created by the Department of Defense to protect sensitive unclassified information.' },
-  { question: 'What are the CMMC levels?', answer: 'CMMC 2.0 has three levels: Level 1 (Foundational) covers 15 practices for protecting FCI with annual self-assessment. Level 2 (Advanced) covers 110 practices from NIST SP 800-171 for protecting CUI. Level 3 (Expert) adds additional practices from NIST SP 800-172 for protecting CUI from APTs.' },
-  { question: 'What is a C3PAO?', answer: 'A CMMC Third-Party Assessment Organization (C3PAO) is an authorized organization that conducts CMMC Level 2 assessments. These organizations are accredited by the Cyber-AB to perform official CMMC certifications.' },
-  { question: 'How do I cancel my subscription?', answer: 'You can cancel your subscription at any time from your account settings. Your access will continue until the end of your current billing period.' },
-]
-
+// Single source of truth for FAQ data
 const faqs = [
   {
     category: 'About CMMC Directory',
@@ -39,7 +29,7 @@ const faqs = [
       },
       {
         q: 'How much does a subscription cost?',
-        a: 'Access to the CMMC Directory is $10 per month. This gives you unlimited access to search, filter, and view detailed information about all verified companies in our directory.',
+        a: `Access to the CMMC Directory is $${SUBSCRIPTION_PRICE} per month. This gives you unlimited access to search, filter, and view detailed information about all verified companies in our directory.`,
       },
     ],
   },
@@ -100,6 +90,11 @@ const faqs = [
   },
 ]
 
+// Generate flattened FAQ for JSON-LD from the single source of truth
+const allFaqQuestions = faqs.flatMap(section =>
+  section.questions.map(faq => ({ question: faq.q, answer: faq.a }))
+)
+
 export default function FAQPage() {
   return (
     <>
@@ -159,7 +154,7 @@ export default function FAQPage() {
                   Can&apos;t find the answer you&apos;re looking for? Our support team is here to help.
                 </p>
                 <a
-                  href="mailto:support@cmmcdirectory.com"
+                  href={`mailto:${SUPPORT_EMAIL}`}
                   className="inline-flex items-center px-6 py-3 bg-white text-accent font-semibold rounded hover:bg-gray-100 transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

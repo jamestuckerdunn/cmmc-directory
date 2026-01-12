@@ -61,9 +61,8 @@ export async function rateLimit(
     )
 
     return { success, limit, remaining, reset }
-  } catch (error) {
-    console.error('Rate limit error:', error)
-    // On error, allow the request but log the issue
+  } catch {
+    // On error, allow the request to proceed
     return { success: true }
   }
 }

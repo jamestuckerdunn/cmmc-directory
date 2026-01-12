@@ -6,6 +6,7 @@ import { useClerkConfigured } from '@/components/providers/ClerkProviderWrapper'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { SUBSCRIPTION_PRICE } from '@/constants'
 
 function SettingsContent() {
   const { user, isLoaded } = useUser()
@@ -69,7 +70,7 @@ function SettingsContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">CMMC Directory Access</p>
-                  <p className="text-gray-500">$10/month</p>
+                  <p className="text-gray-500">${SUBSCRIPTION_PRICE}/month</p>
                 </div>
                 <Badge variant={isSubscribed ? 'success' : 'error'}>
                   {isSubscribed ? 'Active' : 'Inactive'}

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
+import { SUPPORT_EMAIL } from '@/constants'
 
 export default function NotFound() {
   return (
@@ -59,10 +60,10 @@ export default function NotFound() {
               Need help? Contact our support team.
             </p>
             <a
-              href="mailto:support@cmmcdirectory.com"
+              href={`mailto:${SUPPORT_EMAIL}`}
               className="text-accent hover:text-accent-dark transition-colors focus:outline-none focus:underline"
             >
-              support@cmmcdirectory.com
+              {SUPPORT_EMAIL}
             </a>
           </div>
         </div>

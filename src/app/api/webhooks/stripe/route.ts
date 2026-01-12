@@ -5,6 +5,59 @@ import { stripe } from '@/lib/stripe'
 import { getUserByStripeCustomerId, updateUserById, upsertSubscription } from '@/lib/db'
 import { sendWelcomeEmail } from '@/lib/resend'
 
+// Helper to get customer ID from subscription (handles string or expanded object)
+function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustomer): string {
+  return typeof customer === 'string' ? customer : customer.id
+}
+
+// Helper to map Stripe status to our internal status
+function mapSubscriptionStatus(status: Stripe.Subscription.Status): string {
+  switch (status) {
+    case 'active':
+      return 'active'
+    case 'past_due':
+      return 'past_due'
+    case 'canceled':
+      return 'canceled'
+    default:
+      return 'inactive'
+  }
+}
+
+async function handleSubscriptionChange(subscription: Stripe.Subscription) {
+  const customerId = getCustomerId(subscription.customer)
+  const user = await getUserByStripeCustomerId(customerId)
+
+  if (!user) {
+    return
+  }
+
+  const status = mapSubscriptionStatus(subscription.status)
+  const firstItem = subscription.items.data[0]
+
+  // Get period from subscription item (Stripe SDK v20+)
+  const periodEnd = firstItem?.current_period_end ?? subscription.billing_cycle_anchor
+  const periodStart = firstItem?.current_period_start ?? subscription.billing_cycle_anchor
+
+  await updateUserById(user.id, {
+    subscriptionStatus: status,
+    subscriptionEndDate: new Date(periodEnd * 1000).toISOString(),
+  })
+
+  await upsertSubscription({
+    userId: user.id,
+    stripeSubscriptionId: subscription.id,
+    stripePriceId: firstItem?.price.id ?? '',
+    status: subscription.status,
+    currentPeriodStart: new Date(periodStart * 1000).toISOString(),
+    currentPeriodEnd: new Date(periodEnd * 1000).toISOString(),
+    cancelAtPeriodEnd: subscription.cancel_at_period_end,
+    canceledAt: subscription.canceled_at
+      ? new Date(subscription.canceled_at * 1000).toISOString()
+      : null,
+  })
+}
+
 export async function POST(req: Request) {
   const body = await req.text()
   const headersList = await headers()
@@ -18,87 +71,37 @@ export async function POST(req: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err)
+  } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
-  const handleSubscriptionChange = async (subscriptionData: Record<string, unknown>) => {
-    const subscription = subscriptionData as {
-      id: string
-      customer: string
-      status: string
-      items: { data: Array<{ price: { id: string } }> }
-      current_period_start: number
-      current_period_end: number
-      cancel_at_period_end: boolean
-      canceled_at: number | null
-    }
-
-    const customerId = subscription.customer
-
-    // Find user by Stripe customer ID
-    const user = await getUserByStripeCustomerId(customerId)
-
-    if (!user) {
-      console.error('User not found for customer:', customerId)
-      return
-    }
-
-    // Update user subscription status
-    const status = subscription.status === 'active' ? 'active' :
-                   subscription.status === 'past_due' ? 'past_due' :
-                   subscription.status === 'canceled' ? 'canceled' : 'inactive'
-
-    await updateUserById(user.id, {
-      subscriptionStatus: status,
-      subscriptionEndDate: new Date(subscription.current_period_end * 1000).toISOString(),
-    })
-
-    // Upsert subscription record
-    await upsertSubscription({
-      userId: user.id,
-      stripeSubscriptionId: subscription.id,
-      stripePriceId: subscription.items.data[0].price.id,
-      status: subscription.status,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancelAtPeriodEnd: subscription.cancel_at_period_end,
-      canceledAt: subscription.canceled_at
-        ? new Date(subscription.canceled_at * 1000).toISOString()
-        : null,
-    })
-  }
-
   switch (event.type) {
-    case 'customer.subscription.created':
-      const newSubscription = event.data.object as unknown as Record<string, unknown>
-      const newCustomerId = newSubscription.customer as string
+    case 'customer.subscription.created': {
+      const subscription = event.data.object as Stripe.Subscription
+      const customerId = getCustomerId(subscription.customer)
 
-      // Get customer email and send welcome
       try {
-        const customer = await stripe.customers.retrieve(newCustomerId)
+        const customer = await stripe.customers.retrieve(customerId)
         if (customer && !customer.deleted && customer.email) {
-          await sendWelcomeEmail(
-            customer.email,
-            customer.name || 'there'
-          )
+          await sendWelcomeEmail(customer.email, customer.name || 'there')
         }
-      } catch (emailError) {
-        console.error('Failed to send welcome email:', emailError)
+      } catch {
+        // Email sending failed - subscription still proceeds
       }
 
-      await handleSubscriptionChange(newSubscription)
+      await handleSubscriptionChange(subscription)
       break
+    }
 
-    case 'customer.subscription.updated':
-      await handleSubscriptionChange(event.data.object as unknown as Record<string, unknown>)
+    case 'customer.subscription.updated': {
+      const subscription = event.data.object as Stripe.Subscription
+      await handleSubscriptionChange(subscription)
       break
+    }
 
-    case 'customer.subscription.deleted':
-      const subscription = event.data.object as unknown as Record<string, unknown>
-      const customerId = subscription.customer as string
-
+    case 'customer.subscription.deleted': {
+      const subscription = event.data.object as Stripe.Subscription
+      const customerId = getCustomerId(subscription.customer)
       const user = await getUserByStripeCustomerId(customerId)
 
       if (user) {
@@ -107,6 +110,7 @@ export async function POST(req: Request) {
         })
       }
       break
+    }
   }
 
   return NextResponse.json({ received: true })

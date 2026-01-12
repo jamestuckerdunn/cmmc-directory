@@ -78,8 +78,7 @@ export function useSubscription(): SubscriptionState {
 
         const data = await response.json()
         setIsSubscribed(data?.subscriptionStatus === 'active')
-      } catch (err) {
-        console.error('Error checking subscription:', err)
+      } catch {
         setError('Network error. Please check your connection.')
         setIsSubscribed(false)
       } finally {
@@ -130,8 +129,7 @@ export function useSubscription(): SubscriptionState {
       }
 
       window.location.href = url
-    } catch (err) {
-      console.error('Failed to create checkout:', err)
+    } catch {
       setError('Network error. Please check your connection.')
     }
   }, [isClerkConfigured])
@@ -173,8 +171,7 @@ export function useSubscription(): SubscriptionState {
       }
 
       window.location.href = url
-    } catch (err) {
-      console.error('Failed to open portal:', err)
+    } catch {
       setError('Network error. Please check your connection.')
     }
   }, [isClerkConfigured])

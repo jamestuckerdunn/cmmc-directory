@@ -93,16 +93,17 @@ export async function deleteUser(clerkId: string) {
   await sql`DELETE FROM users WHERE clerk_id = ${clerkId}`
 }
 
-// Helper function to get companies with filters
-export async function getCompanies(options: {
+// Shared filter options type
+interface CompanyFilterOptions {
   status?: string
   cmmcLevel?: number
   state?: string
   search?: string
   userId?: string
-  limit?: number
-  offset?: number
-}) {
+}
+
+// Helper to build company filter conditions (DRY principle)
+function buildCompanyFilters(options: CompanyFilterOptions) {
   const conditions: string[] = []
   const values: (string | number | boolean | null)[] = []
   let paramIndex = 1
@@ -130,6 +131,17 @@ export async function getCompanies(options: {
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+  return { whereClause, values, paramIndex }
+}
+
+// Helper function to get companies with filters
+export async function getCompanies(options: CompanyFilterOptions & {
+  limit?: number
+  offset?: number
+}) {
+  const { whereClause, values, paramIndex: startIndex } = buildCompanyFilters(options)
+  let paramIndex = startIndex
+
   const limitClause = options.limit ? `LIMIT $${paramIndex++}` : ''
   const offsetClause = options.offset ? `OFFSET $${paramIndex++}` : ''
 
@@ -148,35 +160,8 @@ export async function getCompanies(options: {
 }
 
 // Helper function to count companies
-export async function countCompanies(options: {
-  status?: string
-  cmmcLevel?: number
-  state?: string
-  search?: string
-}) {
-  const conditions: string[] = []
-  const values: (string | number | boolean | null)[] = []
-  let paramIndex = 1
-
-  if (options.status) {
-    conditions.push(`status = $${paramIndex++}`)
-    values.push(options.status)
-  }
-  if (options.cmmcLevel) {
-    conditions.push(`cmmc_level = $${paramIndex++}`)
-    values.push(options.cmmcLevel)
-  }
-  if (options.state) {
-    conditions.push(`state = $${paramIndex++}`)
-    values.push(options.state)
-  }
-  if (options.search) {
-    conditions.push(`(name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`)
-    values.push(`%${options.search}%`)
-    paramIndex++
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+export async function countCompanies(options: CompanyFilterOptions) {
+  const { whereClause, values } = buildCompanyFilters(options)
   const query = `SELECT COUNT(*) as count FROM companies ${whereClause}`
 
   const { rows } = await sql.query(query, values)

@@ -85,16 +85,12 @@ export async function POST(req: Request) {
     // Send confirmation email
     try {
       await sendCompanySubmittedEmail(dbUser.email, company.name)
-    } catch (emailError: unknown) {
-      // Log error without exposing sensitive details
-      console.error('Failed to send company submitted email:',
-        emailError instanceof Error ? emailError.message : 'Unknown error')
+    } catch {
+      // Email sending failed - company creation still succeeds
     }
 
     return NextResponse.json({ id: company.id }, { status: 201 })
-  } catch (error: unknown) {
-    console.error('Company creation error:',
-      error instanceof Error ? error.message : 'Unknown error')
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -183,9 +179,7 @@ export async function PUT(req: Request) {
     }
 
     return NextResponse.json({ id })
-  } catch (error: unknown) {
-    console.error('Company update error:',
-      error instanceof Error ? error.message : 'Unknown error')
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

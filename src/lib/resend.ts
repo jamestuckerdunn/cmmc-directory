@@ -1,7 +1,11 @@
 import { Resend } from 'resend'
+import { NOREPLY_EMAIL } from '@/constants'
 
 // Lazy initialization to avoid build-time errors
 let resendInstance: Resend | null = null
+
+// Email from address with display name
+const EMAIL_FROM = `CMMC Directory <${NOREPLY_EMAIL}>`
 
 function getResend(): Resend {
   if (!resendInstance) {
@@ -25,7 +29,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
   const resend = getResend()
   try {
     await resend.emails.send({
-      from: 'CMMC Directory <noreply@yourdomain.com>',
+      from: EMAIL_FROM,
       to: email,
       subject: 'Welcome to CMMC Directory',
       html: `
@@ -61,8 +65,8 @@ export async function sendWelcomeEmail(email: string, name: string) {
         </div>
       `,
     })
-  } catch (error) {
-    console.error('Failed to send welcome email:', error)
+  } catch {
+    // Email sending failed silently
   }
 }
 
@@ -70,7 +74,7 @@ export async function sendCompanySubmittedEmail(email: string, companyName: stri
   const resend = getResend()
   try {
     await resend.emails.send({
-      from: 'CMMC Directory <noreply@yourdomain.com>',
+      from: EMAIL_FROM,
       to: email,
       subject: `Company Registration Received: ${companyName}`,
       html: `
@@ -102,8 +106,8 @@ export async function sendCompanySubmittedEmail(email: string, companyName: stri
         </div>
       `,
     })
-  } catch (error) {
-    console.error('Failed to send company submitted email:', error)
+  } catch {
+    // Email sending failed silently
   }
 }
 
@@ -111,7 +115,7 @@ export async function sendCompanyVerifiedEmail(email: string, companyName: strin
   const resend = getResend()
   try {
     await resend.emails.send({
-      from: 'CMMC Directory <noreply@yourdomain.com>',
+      from: EMAIL_FROM,
       to: email,
       subject: `Company Verified: ${companyName} is Now Live!`,
       html: `
@@ -143,7 +147,7 @@ export async function sendCompanyVerifiedEmail(email: string, companyName: strin
         </div>
       `,
     })
-  } catch (error) {
-    console.error('Failed to send company verified email:', error)
+  } catch {
+    // Email sending failed silently
   }
 }

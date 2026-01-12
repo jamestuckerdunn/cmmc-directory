@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
+import { SUPPORT_EMAIL } from '@/constants'
 
 export default function Error({
   error,
@@ -10,10 +10,6 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error('Application error:', error.message)
-  }, [error])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -62,10 +58,10 @@ export default function Error({
         <p className="mt-6 text-sm text-gray-500">
           If this problem persists, please contact{' '}
           <a
-            href="mailto:support@cmmcdirectory.com"
+            href={`mailto:${SUPPORT_EMAIL}`}
             className="text-accent hover:underline"
           >
-            support@cmmcdirectory.com
+            {SUPPORT_EMAIL}
           </a>
         </p>
       </div>
