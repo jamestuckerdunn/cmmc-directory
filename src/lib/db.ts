@@ -44,7 +44,7 @@ export async function updateUser(clerkId: string, data: {
   subscriptionEndDate?: string | null
 }) {
   const updates: string[] = []
-  const values: any[] = []
+  const values: (string | number | boolean | null)[] = []
   let paramIndex = 1
 
   if (data.email !== undefined) {
@@ -104,7 +104,7 @@ export async function getCompanies(options: {
   offset?: number
 }) {
   const conditions: string[] = []
-  const values: any[] = []
+  const values: (string | number | boolean | null)[] = []
   let paramIndex = 1
 
   if (options.status) {
@@ -155,7 +155,7 @@ export async function countCompanies(options: {
   search?: string
 }) {
   const conditions: string[] = []
-  const values: any[] = []
+  const values: (string | number | boolean | null)[] = []
   let paramIndex = 1
 
   if (options.status) {

@@ -20,7 +20,7 @@ export default function TermsPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12 prose prose-navy max-w-none">
               <h2>Agreement to Terms</h2>
               <p>
-                By accessing or using CMMC Directory ("the Service"), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
+                By accessing or using CMMC Directory (&quot;the Service&quot;), you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
               </p>
 
               <h2>Description of Service</h2>
@@ -119,7 +119,7 @@ export default function TermsPage() {
 
               <h3>No Warranty</h3>
               <p>
-                THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. We do not warrant that the Service will be uninterrupted, error-free, or free of harmful components.
+                THE SERVICE IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. We do not warrant that the Service will be uninterrupted, error-free, or free of harmful components.
               </p>
 
               <h3>Verification Limitations</h3>
@@ -158,7 +158,7 @@ export default function TermsPage() {
 
               <h2>Changes to Terms</h2>
               <p>
-                We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on this page and updating the "Last updated" date. Continued use of the Service after changes constitutes acceptance of the modified Terms.
+                We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the updated Terms on this page and updating the &quot;Last updated&quot; date. Continued use of the Service after changes constitutes acceptance of the modified Terms.
               </p>
 
               <h2>Severability</h2>

@@ -34,7 +34,7 @@ export default async function DashboardPage() {
             <p className="text-navy-200 text-sm mb-1">Welcome back,</p>
             <h1 className="text-3xl font-bold">{user.first_name || 'there'}!</h1>
             <p className="text-navy-200 mt-2">
-              Here's what's happening with your CMMC Directory account.
+              Here&apos;s what&apos;s happening with your CMMC Directory account.
             </p>
           </div>
           <div className="mt-4 md:mt-0">

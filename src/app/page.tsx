@@ -376,7 +376,7 @@ export default function HomePage() {
                       </svg>
                     ))}
                   </div>
-                  <p className="text-gray-700 mb-6 leading-relaxed">"{testimonial.quote}"</p>
+                  <p className="text-gray-700 mb-6 leading-relaxed">&quot;{testimonial.quote}&quot;</p>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-navy-100 rounded-full flex items-center justify-center mr-4">
                       <span className="font-bold text-navy-800">{testimonial.author.split(' ').map(n => n[0]).join('')}</span>

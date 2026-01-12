@@ -1,6 +1,6 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -79,7 +79,6 @@ interface SearchFiltersProps {
 
 export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [search, setSearch] = useState(currentFilters.search || '')
   const [level, setLevel] = useState(currentFilters.level || '')

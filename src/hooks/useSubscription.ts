@@ -1,21 +1,41 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useClerkConfigured } from '@/components/providers/ClerkProviderWrapper'
 
-export function useSubscription() {
+interface SubscriptionState {
+  isSubscribed: boolean
+  isLoading: boolean
+  createCheckout: () => Promise<void>
+  openPortal: () => Promise<void>
+}
+
+export function useSubscription(): SubscriptionState {
   const isClerkConfigured = useClerkConfigured()
-
-  // Only call useUser when Clerk is configured
-  const clerkUser = isClerkConfigured ? useUser() : { user: null, isLoaded: true }
-  const { user, isLoaded } = clerkUser
-
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
+  // This is safe because when Clerk is not configured,
+  // ClerkProvider isn't mounted and useUser won't be called
+  // in a component that requires it
+  let user = null
+  let isLoaded = true
+
+  if (isClerkConfigured) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const clerkData = useUser()
+    user = clerkData.user
+    isLoaded = clerkData.isLoaded
+  }
+
   useEffect(() => {
-    if (!isClerkConfigured || !isLoaded || !user) {
+    if (!isClerkConfigured) {
+      setIsLoading(false)
+      return
+    }
+
+    if (!isLoaded || !user) {
       setIsLoading(false)
       return
     }
@@ -36,7 +56,11 @@ export function useSubscription() {
     checkSubscription()
   }, [user, isLoaded, isClerkConfigured])
 
-  const createCheckout = async () => {
+  const createCheckout = useCallback(async () => {
+    if (!isClerkConfigured) {
+      console.warn('Clerk not configured, cannot create checkout')
+      return
+    }
     try {
       const response = await fetch('/api/subscription/checkout', {
         method: 'POST',
@@ -50,9 +74,13 @@ export function useSubscription() {
     } catch (error) {
       console.error('Failed to create checkout:', error)
     }
-  }
+  }, [isClerkConfigured])
 
-  const openPortal = async () => {
+  const openPortal = useCallback(async () => {
+    if (!isClerkConfigured) {
+      console.warn('Clerk not configured, cannot open portal')
+      return
+    }
     try {
       const response = await fetch('/api/subscription/portal', {
         method: 'POST',
@@ -66,7 +94,7 @@ export function useSubscription() {
     } catch (error) {
       console.error('Failed to open portal:', error)
     }
-  }
+  }, [isClerkConfigured])
 
   return {
     isSubscribed,

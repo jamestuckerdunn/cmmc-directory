@@ -20,7 +20,7 @@ export default function PrivacyPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12 prose prose-navy max-w-none">
               <h2>Introduction</h2>
               <p>
-                CMMC Directory ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+                CMMC Directory (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
               </p>
               <p>
                 Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.
@@ -119,14 +119,14 @@ export default function PrivacyPage() {
                 These third parties have their own privacy policies, and we encourage you to review them.
               </p>
 
-              <h2>Children's Privacy</h2>
+              <h2>Children&apos;s Privacy</h2>
               <p>
                 Our services are not intended for individuals under the age of 18. We do not knowingly collect personal information from children.
               </p>
 
               <h2>Changes to This Policy</h2>
               <p>
-                We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
+                We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the &quot;Last updated&quot; date.
               </p>
 
               <h2>Contact Us</h2>

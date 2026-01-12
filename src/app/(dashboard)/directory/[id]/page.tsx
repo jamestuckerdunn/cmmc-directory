@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getUserByClerkId, getCompanyById, getCompanyNaicsCodes } from '@/lib/db'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -61,10 +62,13 @@ export default async function DirectoryCompanyPage({ params }: DirectoryCompanyP
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div className="flex items-start space-x-4">
             {company.logo_url ? (
-              <img
+              <Image
                 src={company.logo_url}
                 alt={company.name}
+                width={80}
+                height={80}
                 className="w-20 h-20 rounded-lg object-cover"
+                unoptimized
               />
             ) : (
               <div className="w-20 h-20 bg-gradient-to-br from-navy-600 to-navy-800 rounded-lg flex items-center justify-center">

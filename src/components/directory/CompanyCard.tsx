@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 import type { Company } from '@/types'
@@ -31,10 +32,13 @@ export function CompanyCard({ company }: CompanyCardProps) {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-3">
             {company.logo_url ? (
-              <img
+              <Image
                 src={company.logo_url}
                 alt={company.name}
+                width={56}
+                height={56}
                 className="w-14 h-14 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform"
+                unoptimized
               />
             ) : (
               <div className={`w-14 h-14 bg-gradient-to-br ${levelColors[company.cmmc_level as 1 | 2 | 3] || levelColors[1]} rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform`}>

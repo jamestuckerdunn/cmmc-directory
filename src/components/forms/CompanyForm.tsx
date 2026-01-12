@@ -289,7 +289,7 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Select the NAICS codes that apply to your company's services.
+              Select the NAICS codes that apply to your company&apos;s services.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-64 overflow-y-auto border border-gray-200 rounded p-4">
               {naicsCodes.map((code) => (

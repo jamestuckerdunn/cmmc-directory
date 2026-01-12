@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import { getUserByClerkId, createCompany, updateCompany, setCompanyNaicsCodes, sql } from '@/lib/db'
+import { getUserByClerkId, createCompany, updateCompany, setCompanyNaicsCodes } from '@/lib/db'
 import { sendCompanySubmittedEmail } from '@/lib/resend'
 
 export async function POST(req: Request) {
