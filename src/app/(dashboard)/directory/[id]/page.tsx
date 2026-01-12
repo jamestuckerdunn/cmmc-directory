@@ -21,14 +21,12 @@ export default async function DirectoryCompanyPage({ params }: DirectoryCompanyP
 
   const { id } = await params
 
-  // Check subscription status
   const user = await getUserByClerkId(userId)
 
   if (user?.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
-  // Get company (must be verified for directory view)
   const company = await getCompanyById(id)
 
   if (!company || company.status !== 'verified') {

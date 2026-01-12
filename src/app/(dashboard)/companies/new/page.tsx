@@ -10,14 +10,12 @@ export default async function NewCompanyPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  // Check subscription
   const user = await getUserByClerkId(userId)
 
   if (user?.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
-  // Get NAICS codes
   const naicsCodes = await getNaicsCodes()
 
   return (
