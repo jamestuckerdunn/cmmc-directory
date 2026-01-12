@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getUserByClerkId } from '@/lib/db'
 
 export async function POST() {
   try {
@@ -11,11 +11,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('stripe_customer_id')
-      .eq('clerk_id', userId)
-      .single()
+    const user = await getUserByClerkId(userId)
 
     if (!user?.stripe_customer_id) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 400 })

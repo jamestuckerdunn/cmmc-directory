@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
-import type { Company } from '@/lib/supabase/types'
+import type { Company } from '@/types'
 
 interface CompanyCardProps {
   company: Company & {

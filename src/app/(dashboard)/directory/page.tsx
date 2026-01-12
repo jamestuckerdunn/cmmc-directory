@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getUserByClerkId, getCompanies, countCompanies, getNaicsCodes } from '@/lib/db'
 import { CompanyList } from '@/components/directory/CompanyList'
 import { SearchFilters } from '@/components/directory/SearchFilters'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
@@ -25,55 +25,33 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const page = parseInt(params.page || '1')
   const perPage = 12
 
-  const supabase = await createClient()
-
   // Check subscription status
-  const { data: user } = await supabase
-    .from('users')
-    .select('subscription_status')
-    .eq('clerk_id', userId)
-    .single()
+  const user = await getUserByClerkId(userId)
 
   if (user?.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
-  // Build query
-  let query = supabase
-    .from('companies')
-    .select(`
-      *,
-      company_naics (
-        naics_codes (code, title)
-      )
-    `, { count: 'exact' })
-    .eq('status', 'verified')
-    .order('is_featured', { ascending: false })
-    .order('name', { ascending: true })
+  // Get companies with filters
+  const companies = await getCompanies({
+    status: 'verified',
+    cmmcLevel: params.level ? parseInt(params.level) : undefined,
+    state: params.state,
+    search: params.search,
+    limit: perPage,
+    offset: (page - 1) * perPage,
+  })
 
-  // Apply filters
-  if (params.search) {
-    query = query.or(`name.ilike.%${params.search}%,description.ilike.%${params.search}%`)
-  }
-  if (params.level) {
-    query = query.eq('cmmc_level', parseInt(params.level))
-  }
-  if (params.state) {
-    query = query.eq('state', params.state)
-  }
-
-  // Pagination
-  const from = (page - 1) * perPage
-  const to = from + perPage - 1
-  query = query.range(from, to)
-
-  const { data: companies, count } = await query
+  // Get total count for pagination
+  const count = await countCompanies({
+    status: 'verified',
+    cmmcLevel: params.level ? parseInt(params.level) : undefined,
+    state: params.state,
+    search: params.search,
+  })
 
   // Get NAICS codes for filter
-  const { data: naicsCodes } = await supabase
-    .from('naics_codes')
-    .select('code, title')
-    .order('code')
+  const naicsCodes = await getNaicsCodes()
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

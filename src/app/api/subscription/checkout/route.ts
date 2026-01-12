@@ -1,7 +1,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getUserByClerkId, updateUser } from '@/lib/db'
 
 export async function POST() {
   try {
@@ -13,11 +13,7 @@ export async function POST() {
     }
 
     // Get or create Stripe customer
-    const { data: dbUser } = await supabaseAdmin
-      .from('users')
-      .select('stripe_customer_id')
-      .eq('clerk_id', userId)
-      .single()
+    const dbUser = await getUserByClerkId(userId)
 
     let customerId = dbUser?.stripe_customer_id
 
@@ -32,10 +28,7 @@ export async function POST() {
 
       customerId = customer.id
 
-      await supabaseAdmin
-        .from('users')
-        .update({ stripe_customer_id: customerId })
-        .eq('clerk_id', userId)
+      await updateUser(userId, { stripeCustomerId: customerId })
     }
 
     // Create checkout session

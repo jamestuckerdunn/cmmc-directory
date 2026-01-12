@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { getUserByClerkId, getCompanies, countCompanies } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -13,29 +13,15 @@ export default async function DashboardPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  const supabase = await createClient()
-
-  const { data: user } = await supabase
-    .from('users')
-    .select('*, companies:companies(count)')
-    .eq('clerk_id', userId)
-    .single()
+  const user = await getUserByClerkId(userId)
 
   if (!user || user.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('id, name, cmmc_level, status')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  const companies = await getCompanies({ userId: user.id, limit: 5 })
 
-  const { count: totalCompanies } = await supabase
-    .from('companies')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'verified')
+  const totalCompanies = await countCompanies({ status: 'verified' })
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

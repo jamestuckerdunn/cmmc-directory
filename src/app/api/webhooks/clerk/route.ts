@@ -1,7 +1,7 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createUser, updateUser, deleteUser } from '@/lib/db'
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -42,14 +42,14 @@ export async function POST(req: Request) {
     const { id, email_addresses, first_name, last_name } = evt.data
     const primaryEmail = email_addresses[0]?.email_address
 
-    const { error } = await supabaseAdmin.from('users').insert({
-      clerk_id: id,
-      email: primaryEmail,
-      first_name,
-      last_name,
-    })
-
-    if (error) {
+    try {
+      await createUser({
+        clerkId: id,
+        email: primaryEmail,
+        firstName: first_name,
+        lastName: last_name,
+      })
+    } catch (error) {
       console.error('Error creating user:', error)
       return new Response('Error creating user', { status: 500 })
     }
@@ -59,16 +59,13 @@ export async function POST(req: Request) {
     const { id, email_addresses, first_name, last_name } = evt.data
     const primaryEmail = email_addresses[0]?.email_address
 
-    const { error } = await supabaseAdmin
-      .from('users')
-      .update({
+    try {
+      await updateUser(id, {
         email: primaryEmail,
-        first_name,
-        last_name,
+        firstName: first_name,
+        lastName: last_name,
       })
-      .eq('clerk_id', id)
-
-    if (error) {
+    } catch (error) {
       console.error('Error updating user:', error)
       return new Response('Error updating user', { status: 500 })
     }
@@ -78,12 +75,9 @@ export async function POST(req: Request) {
     const { id } = evt.data
 
     if (id) {
-      const { error } = await supabaseAdmin
-        .from('users')
-        .delete()
-        .eq('clerk_id', id)
-
-      if (error) {
+      try {
+        await deleteUser(id)
+      } catch (error) {
         console.error('Error deleting user:', error)
         return new Response('Error deleting user', { status: 500 })
       }

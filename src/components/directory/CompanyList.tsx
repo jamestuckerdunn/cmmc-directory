@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CompanyCard } from './CompanyCard'
 import { Button } from '@/components/ui/Button'
-import type { Company } from '@/lib/supabase/types'
+import type { Company } from '@/types'
 
 interface CompanyListProps {
   companies: (Company & {

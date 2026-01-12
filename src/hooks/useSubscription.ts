@@ -2,7 +2,6 @@
 
 import { useUser } from '@clerk/nextjs'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useClerkConfigured } from '@/components/providers/ClerkProviderWrapper'
 
 export function useSubscription() {
@@ -23,14 +22,9 @@ export function useSubscription() {
 
     const checkSubscription = async () => {
       try {
-        const supabase = createClient()
-        const { data } = await supabase
-          .from('users')
-          .select('subscription_status')
-          .eq('clerk_id', user.id)
-          .single()
-
-        setIsSubscribed(data?.subscription_status === 'active')
+        const response = await fetch('/api/subscription/status')
+        const data = await response.json()
+        setIsSubscribed(data?.subscriptionStatus === 'active')
       } catch (error) {
         console.error('Error checking subscription:', error)
         setIsSubscribed(false)

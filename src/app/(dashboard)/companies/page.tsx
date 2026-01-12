@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { getUserByClerkId, getCompanies } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -13,23 +13,13 @@ export default async function MyCompaniesPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  const supabase = await createClient()
-
-  const { data: user } = await supabase
-    .from('users')
-    .select('id, subscription_status')
-    .eq('clerk_id', userId)
-    .single()
+  const user = await getUserByClerkId(userId)
 
   if (user?.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
-  const { data: companies } = await supabase
-    .from('companies')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
+  const companies = await getCompanies({ userId: user.id })
 
   const statusBadge = (status: string) => {
     const variants: Record<string, 'success' | 'warning' | 'error' | 'default'> = {

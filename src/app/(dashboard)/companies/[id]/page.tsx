@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { getUserByClerkId, getCompanyById, getCompanyNaicsCodes, sql } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -18,31 +18,17 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
   if (!userId) redirect('/sign-in')
 
   const { id } = await params
-  const supabase = await createClient()
 
-  const { data: user } = await supabase
-    .from('users')
-    .select('id')
-    .eq('clerk_id', userId)
-    .single()
-
+  const user = await getUserByClerkId(userId)
   if (!user) redirect('/sign-in')
 
-  const { data: company } = await supabase
-    .from('companies')
-    .select(`
-      *,
-      company_naics (
-        naics_codes (code, title)
-      )
-    `)
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
+  const company = await getCompanyById(id)
 
-  if (!company) {
+  if (!company || company.user_id !== user.id) {
     notFound()
   }
+
+  const naicsCodes = await getCompanyNaicsCodes(id)
 
   const statusBadge = (status: string) => {
     const variants: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
@@ -186,11 +172,11 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
             <CardTitle>NAICS Codes</CardTitle>
           </CardHeader>
           <CardContent>
-            {company.company_naics && company.company_naics.length > 0 ? (
+            {naicsCodes && naicsCodes.length > 0 ? (
               <ul className="space-y-2">
-                {company.company_naics.map((cn: { naics_codes: { code: string; title: string } }) => (
-                  <li key={cn.naics_codes.code} className="text-sm">
-                    <span className="font-medium">{cn.naics_codes.code}</span> - {cn.naics_codes.title}
+                {naicsCodes.map((naicsCode) => (
+                  <li key={naicsCode.code} className="text-sm">
+                    <span className="font-medium">{naicsCode.code}</span> - {naicsCode.title}
                   </li>
                 ))}
               </ul>

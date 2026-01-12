@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { stripe } from '@/lib/stripe'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getUserByStripeCustomerId, updateUserById, upsertSubscription } from '@/lib/db'
 import { sendWelcomeEmail } from '@/lib/resend'
 
 export async function POST(req: Request) {
@@ -38,11 +38,7 @@ export async function POST(req: Request) {
     const customerId = subscription.customer
 
     // Find user by Stripe customer ID
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('stripe_customer_id', customerId)
-      .single()
+    const user = await getUserByStripeCustomerId(customerId)
 
     if (!user) {
       console.error('User not found for customer:', customerId)
@@ -54,28 +50,23 @@ export async function POST(req: Request) {
                    subscription.status === 'past_due' ? 'past_due' :
                    subscription.status === 'canceled' ? 'canceled' : 'inactive'
 
-    await supabaseAdmin
-      .from('users')
-      .update({
-        subscription_status: status,
-        subscription_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
-      })
-      .eq('id', user.id)
+    await updateUserById(user.id, {
+      subscriptionStatus: status,
+      subscriptionEndDate: new Date(subscription.current_period_end * 1000).toISOString(),
+    })
 
     // Upsert subscription record
-    await supabaseAdmin.from('subscriptions').upsert({
-      user_id: user.id,
-      stripe_subscription_id: subscription.id,
-      stripe_price_id: subscription.items.data[0].price.id,
+    await upsertSubscription({
+      userId: user.id,
+      stripeSubscriptionId: subscription.id,
+      stripePriceId: subscription.items.data[0].price.id,
       status: subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      canceled_at: subscription.canceled_at
+      currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+      cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      canceledAt: subscription.canceled_at
         ? new Date(subscription.canceled_at * 1000).toISOString()
         : null,
-    }, {
-      onConflict: 'stripe_subscription_id',
     })
   }
 
@@ -108,19 +99,12 @@ export async function POST(req: Request) {
       const subscription = event.data.object as unknown as Record<string, unknown>
       const customerId = subscription.customer as string
 
-      const { data: user } = await supabaseAdmin
-        .from('users')
-        .select('id')
-        .eq('stripe_customer_id', customerId)
-        .single()
+      const user = await getUserByStripeCustomerId(customerId)
 
       if (user) {
-        await supabaseAdmin
-          .from('users')
-          .update({
-            subscription_status: 'canceled',
-          })
-          .eq('id', user.id)
+        await updateUserById(user.id, {
+          subscriptionStatus: 'canceled',
+        })
       }
       break
   }

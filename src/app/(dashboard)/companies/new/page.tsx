@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getUserByClerkId, getNaicsCodes } from '@/lib/db'
 import { CompanyForm } from '@/components/forms/CompanyForm'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
 
@@ -10,24 +10,15 @@ export default async function NewCompanyPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  const supabase = await createClient()
-
   // Check subscription
-  const { data: user } = await supabase
-    .from('users')
-    .select('subscription_status')
-    .eq('clerk_id', userId)
-    .single()
+  const user = await getUserByClerkId(userId)
 
   if (user?.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
   // Get NAICS codes
-  const { data: naicsCodes } = await supabase
-    .from('naics_codes')
-    .select('code, title')
-    .order('code')
+  const naicsCodes = await getNaicsCodes()
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
