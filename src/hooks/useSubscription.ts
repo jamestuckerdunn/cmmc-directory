@@ -1,15 +1,29 @@
 'use client'
 
 import { useUser } from '@clerk/nextjs'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useClerkConfigured } from '@/components/providers/ClerkProviderWrapper'
 
-export function useSubscription() {
-  const isClerkConfigured = useClerkConfigured()
+interface SubscriptionState {
+  isSubscribed: boolean
+  isLoading: boolean
+  createCheckout: () => Promise<void>
+  openPortal: () => Promise<void>
+}
 
-  // Only call useUser when Clerk is configured
-  const clerkUser = isClerkConfigured ? useUser() : { user: null, isLoaded: true }
-  const { user, isLoaded } = clerkUser
+function useClerkUser() {
+  const isClerkConfigured = useClerkConfigured()
+  const clerkData = useUser()
+
+  if (!isClerkConfigured) {
+    return { user: null, isLoaded: true }
+  }
+  return clerkData
+}
+
+export function useSubscription(): SubscriptionState {
+  const isClerkConfigured = useClerkConfigured()
+  const { user, isLoaded } = useClerkUser()
 
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -20,58 +34,44 @@ export function useSubscription() {
       return
     }
 
-    const checkSubscription = async () => {
+    async function fetchSubscriptionStatus() {
       try {
         const response = await fetch('/api/subscription/status')
         const data = await response.json()
         setIsSubscribed(data?.subscriptionStatus === 'active')
-      } catch (error) {
-        console.error('Error checking subscription:', error)
+      } catch {
         setIsSubscribed(false)
       } finally {
         setIsLoading(false)
       }
     }
 
-    checkSubscription()
+    fetchSubscriptionStatus()
   }, [user, isLoaded, isClerkConfigured])
 
-  const createCheckout = async () => {
+  const createCheckout = useCallback(async () => {
     try {
-      const response = await fetch('/api/subscription/checkout', {
-        method: 'POST',
-      })
+      const response = await fetch('/api/subscription/checkout', { method: 'POST' })
       const { url, error } = await response.json()
-      if (error) {
-        console.error('Checkout error:', error)
-        return
+      if (!error && url) {
+        window.location.href = url
       }
-      window.location.href = url
-    } catch (error) {
-      console.error('Failed to create checkout:', error)
+    } catch {
+      // Checkout failed silently
     }
-  }
+  }, [])
 
-  const openPortal = async () => {
+  const openPortal = useCallback(async () => {
     try {
-      const response = await fetch('/api/subscription/portal', {
-        method: 'POST',
-      })
+      const response = await fetch('/api/subscription/portal', { method: 'POST' })
       const { url, error } = await response.json()
-      if (error) {
-        console.error('Portal error:', error)
-        return
+      if (!error && url) {
+        window.location.href = url
       }
-      window.location.href = url
-    } catch (error) {
-      console.error('Failed to open portal:', error)
+    } catch {
+      // Portal failed silently
     }
-  }
+  }, [])
 
-  return {
-    isSubscribed,
-    isLoading,
-    createCheckout,
-    openPortal,
-  }
+  return { isSubscribed, isLoading, createCheckout, openPortal }
 }

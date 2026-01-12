@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getUserByClerkId, getCompanyById, getCompanyNaicsCodes, sql } from '@/lib/db'
+import { getUserByClerkId, getCompanyById, getCompanyNaicsCodes } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -197,7 +197,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
               <div>
                 <h3 className="font-semibold text-yellow-800">Pending Review</h3>
                 <p className="text-sm text-yellow-700">
-                  Your company listing is currently under review. We'll verify your CMMC certification
+                  Your company listing is currently under review. We&apos;ll verify your CMMC certification
                   and notify you once approved. This typically takes 1-3 business days.
                 </p>
               </div>

@@ -7,12 +7,19 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 
+function useClerkUserData() {
+  const isClerkConfigured = useClerkConfigured()
+  const clerkData = useUser()
+
+  if (!isClerkConfigured) {
+    return { user: null, isLoaded: true }
+  }
+  return clerkData
+}
+
 export default function SettingsPage() {
   const isClerkConfigured = useClerkConfigured()
-
-  // Only call useUser when Clerk is configured
-  const clerkUser = isClerkConfigured ? useUser() : { user: null, isLoaded: true }
-  const { user, isLoaded } = clerkUser
+  const { user, isLoaded } = useClerkUserData()
   const { isSubscribed, openPortal, isLoading } = useSubscription()
 
   if (!isLoaded) {
@@ -106,7 +113,7 @@ export default function SettingsPage() {
               ) : (
                 <div>
                   <p className="text-sm text-gray-600 mb-4">
-                    You don't have an active subscription. Subscribe to access the full directory.
+                    You don&apos;t have an active subscription. Subscribe to access the full directory.
                   </p>
                   <Button onClick={() => window.location.href = '/dashboard'}>
                     Subscribe Now
