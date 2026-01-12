@@ -1,9 +1,15 @@
+import type { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { getUserByClerkId, getCompanies, countCompanies, getNaicsCodes } from '@/lib/db'
 import { CompanyList } from '@/components/directory/CompanyList'
 import { SearchFilters } from '@/components/directory/SearchFilters'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+
+export const metadata: Metadata = {
+  title: 'Company Directory',
+  description: 'Browse and search CMMC certified defense contractors. Filter by certification level, location, and NAICS codes.',
+}
 
 export const dynamic = 'force-dynamic'
 

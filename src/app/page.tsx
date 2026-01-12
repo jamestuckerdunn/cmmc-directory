@@ -4,10 +4,38 @@ import { Footer } from '@/components/layout/Footer'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { WebSiteJsonLd, OrganizationJsonLd, ServiceJsonLd } from '@/components/seo/JsonLd'
+
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cmmcdirectory.com'
 
 export default function HomePage() {
   return (
     <>
+      <WebSiteJsonLd
+        name="CMMC Directory"
+        url={siteUrl}
+        description="The comprehensive directory of verified CMMC certified defense contractors"
+        potentialAction={{
+          target: `${siteUrl}/directory?search={search_term_string}`,
+          queryInput: 'required name=search_term_string',
+        }}
+      />
+      <OrganizationJsonLd
+        name="CMMC Directory"
+        url={siteUrl}
+        description="CMMC Directory connects organizations with verified CMMC certified defense contractors in the defense industrial base."
+        contactPoint={{
+          type: 'customer support',
+          email: 'support@cmmcdirectory.com',
+        }}
+      />
+      <ServiceJsonLd
+        name="CMMC Contractor Directory"
+        description="Search and connect with CMMC certified companies in the defense industrial base. Find Level 1, 2, and 3 certified contractors."
+        provider="CMMC Directory"
+        areaServed="United States"
+        serviceType="Business Directory"
+      />
       <Header />
       <main className="flex-1">
         {/* Hero Section - Modern gradient with animated elements */}

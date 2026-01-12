@@ -2,14 +2,32 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { getUserByClerkId, updateUser } from '@/lib/db'
+import { rateLimit } from '@/lib/rate-limit'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth()
     const user = await currentUser()
 
     if (!userId || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting - strict for checkout to prevent abuse
+    const ip = request.headers.get('x-forwarded-for') || 'anonymous'
+    const rateLimitResult = await rateLimit(`checkout:${userId}:${ip}`, 'strict')
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait before trying again.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': String(rateLimitResult.limit || 0),
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining || 0),
+            'X-RateLimit-Reset': String(rateLimitResult.reset || 0),
+          }
+        }
+      )
     }
 
     // Get or create Stripe customer

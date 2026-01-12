@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { SignUp } from '@clerk/nextjs'
+
+export const metadata: Metadata = {
+  title: 'Sign Up',
+  description: 'Create your CMMC Directory account to list your company and find verified CMMC certified contractors.',
+}
 
 export default function SignUpPage() {
   return (

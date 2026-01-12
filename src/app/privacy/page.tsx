@@ -1,5 +1,15 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'Learn how CMMC Directory collects, uses, and protects your personal information.',
+  openGraph: {
+    title: 'Privacy Policy - CMMC Directory',
+    description: 'Learn how CMMC Directory protects your personal information.',
+  },
+}
 
 export default function PrivacyPage() {
   return (

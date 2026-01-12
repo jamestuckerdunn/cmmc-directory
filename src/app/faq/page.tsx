@@ -1,6 +1,29 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Card } from '@/components/ui/Card'
+import { FAQPageJsonLd } from '@/components/seo/JsonLd'
+
+export const metadata: Metadata = {
+  title: 'Frequently Asked Questions',
+  description: 'Find answers to common questions about CMMC Directory, certification requirements, and how to list your company.',
+  openGraph: {
+    title: 'FAQ - CMMC Directory',
+    description: 'Find answers to common questions about CMMC Directory and certification.',
+  },
+}
+
+// Flattened FAQ questions for JSON-LD
+const allFaqQuestions = [
+  { question: 'What is CMMC Directory?', answer: 'CMMC Directory is a comprehensive online platform that connects organizations seeking CMMC-certified defense contractors with verified, compliant companies. Our directory helps streamline the process of finding trusted partners in the defense industrial base.' },
+  { question: 'Who can use this directory?', answer: 'Any organization that needs to find CMMC-certified contractors can subscribe to access our directory. This includes prime contractors, government agencies, and organizations within the defense industrial base seeking compliant partners for their supply chain.' },
+  { question: 'How much does a subscription cost?', answer: 'Access to the CMMC Directory is $10 per month. This gives you unlimited access to search, filter, and view detailed information about all verified companies in our directory.' },
+  { question: 'How do I get my company listed?', answer: 'Simply create an account, subscribe to our service, and complete the company registration form with your CMMC certification details. Our team will verify your certification before your listing goes live.' },
+  { question: 'What is CMMC?', answer: 'The Cybersecurity Maturity Model Certification (CMMC) is a unified standard for implementing cybersecurity across the Defense Industrial Base (DIB). It was created by the Department of Defense to protect sensitive unclassified information.' },
+  { question: 'What are the CMMC levels?', answer: 'CMMC 2.0 has three levels: Level 1 (Foundational) covers 15 practices for protecting FCI with annual self-assessment. Level 2 (Advanced) covers 110 practices from NIST SP 800-171 for protecting CUI. Level 3 (Expert) adds additional practices from NIST SP 800-172 for protecting CUI from APTs.' },
+  { question: 'What is a C3PAO?', answer: 'A CMMC Third-Party Assessment Organization (C3PAO) is an authorized organization that conducts CMMC Level 2 assessments. These organizations are accredited by the Cyber-AB to perform official CMMC certifications.' },
+  { question: 'How do I cancel my subscription?', answer: 'You can cancel your subscription at any time from your account settings. Your access will continue until the end of your current billing period.' },
+]
 
 const faqs = [
   {
@@ -80,6 +103,7 @@ const faqs = [
 export default function FAQPage() {
   return (
     <>
+      <FAQPageJsonLd questions={allFaqQuestions} />
       <Header />
       <main className="flex-1 bg-gray-50">
         {/* Hero Section */}

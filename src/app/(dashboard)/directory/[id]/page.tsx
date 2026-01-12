@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -7,12 +8,42 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+import { LocalBusinessJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
 import { formatDate } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
 interface DirectoryCompanyPageProps {
   params: Promise<{ id: string }>
+}
+
+export async function generateMetadata(
+  { params }: DirectoryCompanyPageProps
+): Promise<Metadata> {
+  const { id } = await params
+  const company = await getCompanyById(id)
+
+  if (!company || company.status !== 'verified') {
+    return {
+      title: 'Company Not Found',
+      robots: { index: false, follow: false },
+    }
+  }
+
+  return {
+    title: `${company.name} - CMMC Level ${company.cmmc_level} Certified`,
+    description: company.description
+      ? `${company.description.slice(0, 150)}...`
+      : `${company.name} is a CMMC Level ${company.cmmc_level} certified company located in ${company.city}, ${company.state}.`,
+    openGraph: {
+      title: `${company.name} - CMMC Level ${company.cmmc_level}`,
+      description: company.description || `CMMC Level ${company.cmmc_level} certified contractor`,
+    },
+    robots: {
+      index: false,
+      follow: false,
+    },
+  }
 }
 
 export default async function DirectoryCompanyPage({ params }: DirectoryCompanyPageProps) {
@@ -44,10 +75,34 @@ export default async function DirectoryCompanyPage({ params }: DirectoryCompanyP
   }
   const levelVariant = levelMap[company.cmmc_level as number] || 'level1'
 
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cmmcdirectory.com'
+
   return (
+    <>
+      <LocalBusinessJsonLd
+        name={company.name}
+        description={company.description || undefined}
+        url={company.website || undefined}
+        telephone={company.phone || undefined}
+        email={company.email || undefined}
+        address={{
+          streetAddress: company.address_line1 || undefined,
+          addressLocality: company.city || undefined,
+          addressRegion: company.state || undefined,
+          postalCode: company.zip_code || undefined,
+          addressCountry: company.country || 'US',
+        }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: siteUrl },
+          { name: 'Directory', url: `${siteUrl}/directory` },
+          { name: company.name, url: `${siteUrl}/directory/${id}` },
+        ]}
+      />
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+      <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
         <Link href="/directory" className="hover:text-accent transition-colors">
           Directory
         </Link>
@@ -290,5 +345,6 @@ export default async function DirectoryCompanyPage({ params }: DirectoryCompanyP
         </Link>
       </div>
     </div>
+    </>
   )
 }

@@ -180,7 +180,7 @@ export async function countCompanies(options: {
   const query = `SELECT COUNT(*) as count FROM companies ${whereClause}`
 
   const { rows } = await sql.query(query, values)
-  return parseInt(rows[0].count)
+  return parseInt(rows[0].count, 10)
 }
 
 // Helper function to get a company by ID
@@ -296,18 +296,22 @@ export async function getCompanyNaicsCodes(companyId: string): Promise<{ code: s
   return rows as { code: string; title: string }[]
 }
 
-// Helper function to set company NAICS codes
+// Helper function to set company NAICS codes with batch insert
 export async function setCompanyNaicsCodes(companyId: string, naicsCodes: string[]) {
-  // Delete existing
+  // Delete existing codes first
   await sql`DELETE FROM company_naics WHERE company_id = ${companyId}`
 
-  // Insert new
-  for (const code of naicsCodes) {
-    await sql`
-      INSERT INTO company_naics (company_id, naics_code)
-      VALUES (${companyId}, ${code})
-    `
+  // If no codes to insert, we're done
+  if (naicsCodes.length === 0) {
+    return
   }
+
+  // Batch insert using VALUES list (more efficient than individual inserts)
+  const valuesList = naicsCodes.map((_, index) => `($1, $${index + 2})`).join(', ')
+  const params = [companyId, ...naicsCodes]
+
+  const query = `INSERT INTO company_naics (company_id, naics_code) VALUES ${valuesList}`
+  await sql.query(query, params)
 }
 
 // Helper function to upsert subscription

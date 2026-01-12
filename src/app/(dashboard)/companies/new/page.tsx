@@ -1,8 +1,18 @@
+import type { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { getUserByClerkId, getNaicsCodes } from '@/lib/db'
 import { CompanyForm } from '@/components/forms/CompanyForm'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+
+export const metadata: Metadata = {
+  title: 'Register Company',
+  description: 'Register your CMMC certified company to be listed in the directory.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export const dynamic = 'force-dynamic'
 
