@@ -1,0 +1,8 @@
+export { HeroSection } from './HeroSection'
+export { StatsSection } from './StatsSection'
+export { FeaturesSection } from './FeaturesSection'
+export { HowItWorksSection } from './HowItWorksSection'
+export { CMMCLevelsSection } from './CMMCLevelsSection'
+export { TestimonialsSection } from './TestimonialsSection'
+export { PricingSection } from './PricingSection'
+export { CTASection } from './CTASection'

@@ -132,7 +132,7 @@ export default function FAQPage() {
               <div className="text-center py-8 px-6">
                 <h2 className="text-2xl font-bold mb-4">Still have questions?</h2>
                 <p className="text-accent-light mb-6">
-                  Can't find the answer you're looking for? Our support team is here to help.
+                  Can&apos;t find the answer you&apos;re looking for? Our support team is here to help.
                 </p>
                 <a
                   href="mailto:support@cmmcdirectory.com"

@@ -1,3 +1,20 @@
+// ============================================================================
+// UI Types
+// ============================================================================
+
+export type BadgeVariant = 'default' | 'success' | 'warning' | 'error' | 'level1' | 'level2' | 'level3'
+
+export type SelectOption = {
+  value: string
+  label: string
+}
+
+// ============================================================================
+// User Types
+// ============================================================================
+
+export type SubscriptionStatus = 'active' | 'inactive' | 'past_due' | 'canceled'
+
 export type User = {
   id: string
   clerk_id: string
@@ -5,11 +22,15 @@ export type User = {
   first_name: string | null
   last_name: string | null
   stripe_customer_id: string | null
-  subscription_status: 'active' | 'inactive' | 'past_due' | 'canceled'
+  subscription_status: SubscriptionStatus
   subscription_end_date: string | null
   created_at: string
   updated_at: string
 }
+
+// ============================================================================
+// Company Types
+// ============================================================================
 
 export type CMMCLevel = 1 | 2 | 3
 
@@ -45,12 +66,24 @@ export type Company = {
   updated_at: string
 }
 
+export type CompanyWithNAICS = Company & {
+  naics_codes: NAICSCode[]
+}
+
+// ============================================================================
+// NAICS Types
+// ============================================================================
+
 export type NAICSCode = {
   code: string
   title: string
   description: string | null
   sector: string | null
 }
+
+// ============================================================================
+// Document Types
+// ============================================================================
 
 export type DocumentType = 'certificate' | 'assessment_report' | 'ssp' | 'poam' | 'other'
 
@@ -67,6 +100,10 @@ export type ComplianceEvidence = {
   uploaded_at: string
 }
 
+// ============================================================================
+// Subscription Types
+// ============================================================================
+
 export type Subscription = {
   id: string
   user_id: string
@@ -81,6 +118,30 @@ export type Subscription = {
   updated_at: string
 }
 
-export type CompanyWithNAICS = Company & {
-  naics_codes: NAICSCode[]
+// ============================================================================
+// API Types
+// ============================================================================
+
+export type ApiResponse<T> = {
+  data?: T
+  error?: string
+}
+
+export type PaginatedResponse<T> = {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+// ============================================================================
+// Filter Types
+// ============================================================================
+
+export type CompanyFilters = {
+  search?: string
+  level?: string
+  state?: string
+  naics?: string
 }

@@ -6,13 +6,11 @@ import { getUserByClerkId } from '@/lib/db'
 export async function POST() {
   try {
     const { userId } = await auth()
-
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const user = await getUserByClerkId(userId)
-
     if (!user?.stripe_customer_id) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 400 })
     }
@@ -23,8 +21,7 @@ export async function POST() {
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (error) {
-    console.error('Portal error:', error)
+  } catch {
     return NextResponse.json({ error: 'Failed to create portal session' }, { status: 500 })
   }
 }

@@ -1,8 +1,16 @@
 import { Resend } from 'resend'
 
-export const resend = new Resend(process.env.RESEND_API_KEY)
+let resendInstance: Resend | null = null
+
+function getResend(): Resend {
+  if (!resendInstance) {
+    resendInstance = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resendInstance
+}
 
 export async function sendWelcomeEmail(email: string, name: string) {
+  const resend = getResend()
   await resend.emails.send({
     from: 'CMMC Directory <noreply@yourdomain.com>',
     to: email,
@@ -43,6 +51,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
 }
 
 export async function sendCompanySubmittedEmail(email: string, companyName: string) {
+  const resend = getResend()
   await resend.emails.send({
     from: 'CMMC Directory <noreply@yourdomain.com>',
     to: email,
@@ -79,6 +88,7 @@ export async function sendCompanySubmittedEmail(email: string, companyName: stri
 }
 
 export async function sendCompanyVerifiedEmail(email: string, companyName: string) {
+  const resend = getResend()
   await resend.emails.send({
     from: 'CMMC Directory <noreply@yourdomain.com>',
     to: email,

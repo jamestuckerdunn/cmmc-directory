@@ -25,14 +25,12 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const page = parseInt(params.page || '1')
   const perPage = 12
 
-  // Check subscription status
   const user = await getUserByClerkId(userId)
 
   if (user?.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
-  // Get companies with filters
   const companies = await getCompanies({
     status: 'verified',
     cmmcLevel: params.level ? parseInt(params.level) : undefined,
@@ -42,7 +40,6 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     offset: (page - 1) * perPage,
   })
 
-  // Get total count for pagination
   const count = await countCompanies({
     status: 'verified',
     cmmcLevel: params.level ? parseInt(params.level) : undefined,
@@ -50,7 +47,6 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     search: params.search,
   })
 
-  // Get NAICS codes for filter
   const naicsCodes = await getNaicsCodes()
 
   return (

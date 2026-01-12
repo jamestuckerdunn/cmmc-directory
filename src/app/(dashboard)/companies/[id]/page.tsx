@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getUserByClerkId, getCompanyById, getCompanyNaicsCodes, sql } from '@/lib/db'
+import { getUserByClerkId, getCompanyById, getCompanyNaicsCodes } from '@/lib/db'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -30,7 +30,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
 
   const naicsCodes = await getCompanyNaicsCodes(id)
 
-  const statusBadge = (status: string) => {
+  function renderStatusBadge(status: string) {
     const variants: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
       verified: 'success',
       pending: 'warning',
@@ -63,7 +63,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{company.name}</h1>
               <div className="flex items-center space-x-2 mt-1">
-                {statusBadge(company.status)}
+                {renderStatusBadge(company.status)}
                 <Badge variant={levelVariant}>CMMC Level {company.cmmc_level}</Badge>
               </div>
             </div>
@@ -197,7 +197,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
               <div>
                 <h3 className="font-semibold text-yellow-800">Pending Review</h3>
                 <p className="text-sm text-yellow-700">
-                  Your company listing is currently under review. We'll verify your CMMC certification
+                  Your company listing is currently under review. We&apos;ll verify your CMMC certification
                   and notify you once approved. This typically takes 1-3 business days.
                 </p>
               </div>

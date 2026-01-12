@@ -19,7 +19,7 @@ export function CompanyList({ companies, totalCount, currentPage, perPage }: Com
   const searchParams = useSearchParams()
   const totalPages = Math.ceil(totalCount / perPage)
 
-  const goToPage = (page: number) => {
+  function handlePageChange(page: number) {
     const params = new URLSearchParams(searchParams.toString())
     params.set('page', page.toString())
     router.push(`/directory?${params.toString()}`)
@@ -39,8 +39,7 @@ export function CompanyList({ companies, totalCount, currentPage, perPage }: Com
     )
   }
 
-  // Calculate page numbers to display
-  const getPageNumbers = () => {
+  function getVisiblePageNumbers() {
     const pages: number[] = []
     const maxVisible = 5
 
@@ -79,18 +78,18 @@ export function CompanyList({ companies, totalCount, currentPage, perPage }: Com
             <Button
               variant="outline"
               size="sm"
-              onClick={() => goToPage(currentPage - 1)}
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
               Previous
             </Button>
 
-            {getPageNumbers().map((page) => (
+            {getVisiblePageNumbers().map((page) => (
               <Button
                 key={page}
                 variant={page === currentPage ? 'primary' : 'outline'}
                 size="sm"
-                onClick={() => goToPage(page)}
+                onClick={() => handlePageChange(page)}
               >
                 {page}
               </Button>
@@ -99,7 +98,7 @@ export function CompanyList({ companies, totalCount, currentPage, perPage }: Com
             <Button
               variant="outline"
               size="sm"
-              onClick={() => goToPage(currentPage + 1)}
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
               Next

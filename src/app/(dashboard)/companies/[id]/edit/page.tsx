@@ -17,25 +17,21 @@ export default async function EditCompanyPage({ params }: EditCompanyPageProps) 
 
   const { id } = await params
 
-  // Check subscription
   const user = await getUserByClerkId(userId)
 
   if (user?.subscription_status !== 'active') {
     return <SubscriptionGate />
   }
 
-  // Get company and verify ownership
   const company = await getCompanyById(id)
 
   if (!company || company.user_id !== user.id) {
     notFound()
   }
 
-  // Get NAICS codes
   const naicsCodes = await getNaicsCodes()
   const companyNaicsCodes = await getCompanyNaicsCodes(id)
 
-  // Format dates for form inputs
   const formatDateForInput = (date: Date | string | null) => {
     if (!date) return undefined
     const d = new Date(date)
