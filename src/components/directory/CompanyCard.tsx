@@ -1,7 +1,9 @@
+import { memo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { getLevelBadgeVariant } from '@/constants'
 import type { Company } from '@/types'
 
 interface CompanyCardProps {
@@ -10,12 +12,8 @@ interface CompanyCardProps {
   }
 }
 
-export function CompanyCard({ company }: CompanyCardProps) {
-  const levelVariant = {
-    1: 'level1',
-    2: 'level2',
-    3: 'level3',
-  }[company.cmmc_level] as 'level1' | 'level2' | 'level3'
+export const CompanyCard = memo(function CompanyCard({ company }: CompanyCardProps) {
+  const levelVariant = getLevelBadgeVariant(company.cmmc_level)
 
   const levelColors = {
     1: 'from-blue-500 to-blue-600',
@@ -34,11 +32,10 @@ export function CompanyCard({ company }: CompanyCardProps) {
             {company.logo_url ? (
               <Image
                 src={company.logo_url}
-                alt={company.name}
+                alt={`${company.name} logo`}
                 width={56}
                 height={56}
                 className="w-14 h-14 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform"
-                unoptimized
               />
             ) : (
               <div className={`w-14 h-14 bg-gradient-to-br ${levelColors[company.cmmc_level as 1 | 2 | 3] || levelColors[1]} rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform`}>
@@ -110,4 +107,4 @@ export function CompanyCard({ company }: CompanyCardProps) {
       </Card>
     </Link>
   )
-}
+})
