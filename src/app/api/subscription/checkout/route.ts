@@ -1,6 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { getUserByClerkId, updateUser } from '@/lib/db'
 
 export async function POST() {
@@ -12,6 +12,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const stripe = getStripe()
     const dbUser = await getUserByClerkId(userId)
     let customerId = dbUser?.stripe_customer_id
 

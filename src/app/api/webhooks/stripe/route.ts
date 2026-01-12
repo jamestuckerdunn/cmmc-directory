@@ -1,7 +1,7 @@
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { getUserByStripeCustomerId, updateUserById, upsertSubscription } from '@/lib/db'
 import { sendWelcomeEmail } from '@/lib/resend'
 
@@ -53,6 +53,7 @@ export async function POST(req: Request) {
   const headersList = await headers()
   const signature = headersList.get('stripe-signature')!
 
+  const stripe = getStripe()
   let event: Stripe.Event
   try {
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
