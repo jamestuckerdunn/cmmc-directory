@@ -28,7 +28,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   if (!userId) redirect('/sign-in')
 
   const params = await searchParams
-  const page = parseInt(params.page || '1')
+  const page = parseInt(params.page || '1', 10)
   const perPage = 12
 
   // Check subscription status
@@ -41,7 +41,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   // Get companies with filters
   const companies = await getCompanies({
     status: 'verified',
-    cmmcLevel: params.level ? parseInt(params.level) : undefined,
+    cmmcLevel: params.level ? parseInt(params.level, 10) : undefined,
     state: params.state,
     search: params.search,
     limit: perPage,
@@ -51,7 +51,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   // Get total count for pagination
   const count = await countCompanies({
     status: 'verified',
-    cmmcLevel: params.level ? parseInt(params.level) : undefined,
+    cmmcLevel: params.level ? parseInt(params.level, 10) : undefined,
     state: params.state,
     search: params.search,
   })

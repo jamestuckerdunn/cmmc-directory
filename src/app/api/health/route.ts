@@ -19,7 +19,6 @@ interface HealthCheckResult {
 }
 
 export async function GET() {
-  const startTime = Date.now()
   const result: HealthCheckResult = {
     status: 'healthy',
     timestamp: new Date().toISOString(),

@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
-import { Checkbox } from '@/components/ui/Checkbox'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { US_STATES, CMMC_LEVELS_EXTENDED, ASSESSMENT_TYPES } from '@/constants'
@@ -53,7 +52,7 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
         body: JSON.stringify({
           ...data,
           id: initialData?.id,
-          cmmc_level: parseInt(data.cmmc_level as string),
+          cmmc_level: parseInt(data.cmmc_level as string, 10),
           naics_codes: formData.getAll('naics_codes'),
         }),
       })
