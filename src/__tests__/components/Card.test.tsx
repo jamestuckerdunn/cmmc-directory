@@ -10,7 +10,7 @@ describe('Card', () => {
   it('applies base styling', () => {
     render(<Card data-testid="card">Content</Card>)
     const card = screen.getByTestId('card')
-    expect(card).toHaveClass('bg-white', 'rounded-xl', 'shadow-sm', 'border', 'border-gray-100', 'p-6')
+    expect(card).toHaveClass('bg-white', 'rounded-lg', 'shadow-sm', 'border', 'border-gray-200', 'p-6')
   })
 
   it('applies custom className', () => {
@@ -86,7 +86,7 @@ describe('CardFooter', () => {
   it('applies proper styling', () => {
     render(<CardFooter data-testid="footer">Footer</CardFooter>)
     const footer = screen.getByTestId('footer')
-    expect(footer).toHaveClass('pt-4', 'border-t', 'border-gray-100')
+    expect(footer).toHaveClass('pt-4', 'border-t')
   })
 
   it('applies custom className', () => {

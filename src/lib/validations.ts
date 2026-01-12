@@ -31,7 +31,7 @@ export const companySchema = z.object({
     .optional()
     .nullable(),
   certification_expiry: z.string().optional().nullable(),
-  assessment_type: z.enum(['self', 'c3pao', '']).optional().nullable(),
+  assessment_type: z.enum(['self', 'c3pao', 'dibcac', '']).optional().nullable(),
   c3pao_name: z.string().max(255, 'C3PAO name too long').optional().nullable(),
   naics_codes: z.array(z.string()).optional(),
 })
