@@ -25,7 +25,7 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
   const [state, setState] = useState(currentFilters.state || '')
   const [naics, setNaics] = useState(currentFilters.naics || '')
 
-  const applyFilters = () => {
+  function handleApplyFilters() {
     const params = new URLSearchParams()
     if (search) params.set('search', search)
     if (level) params.set('level', level)
@@ -34,7 +34,7 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
     router.push(`/directory?${params.toString()}`)
   }
 
-  const clearFilters = () => {
+  function handleClearFilters() {
     setSearch('')
     setLevel('')
     setState('')
@@ -42,9 +42,9 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
     router.push('/directory')
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter') {
-      applyFilters()
+      handleApplyFilters()
     }
   }
 
@@ -86,10 +86,10 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
         />
 
         <div className="flex flex-col space-y-2">
-          <Button onClick={applyFilters}>
+          <Button onClick={handleApplyFilters}>
             Apply Filters
           </Button>
-          <Button variant="ghost" onClick={clearFilters}>
+          <Button variant="ghost" onClick={handleClearFilters}>
             Clear Filters
           </Button>
         </div>

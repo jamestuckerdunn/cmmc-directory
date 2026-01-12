@@ -30,7 +30,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
 
   const naicsCodes = await getCompanyNaicsCodes(id)
 
-  const statusBadge = (status: string) => {
+  function renderStatusBadge(status: string) {
     const variants: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
       verified: 'success',
       pending: 'warning',
@@ -63,7 +63,7 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{company.name}</h1>
               <div className="flex items-center space-x-2 mt-1">
-                {statusBadge(company.status)}
+                {renderStatusBadge(company.status)}
                 <Badge variant={levelVariant}>CMMC Level {company.cmmc_level}</Badge>
               </div>
             </div>

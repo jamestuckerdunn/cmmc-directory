@@ -21,7 +21,7 @@ export default async function MyCompaniesPage() {
 
   const companies = await getCompanies({ userId: user.id })
 
-  const statusBadge = (status: string) => {
+  function renderStatusBadge(status: string) {
     const variants: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
       verified: 'success',
       pending: 'warning',
@@ -63,7 +63,7 @@ export default async function MyCompaniesPage() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                {statusBadge(company.status)}
+                {renderStatusBadge(company.status)}
                 <Link href={`/companies/${company.id}`}>
                   <Button variant="outline" size="sm">Manage</Button>
                 </Link>
