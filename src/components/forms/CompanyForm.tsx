@@ -4,74 +4,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { Textarea } from '@/components/ui/Textarea'
+import { Checkbox } from '@/components/ui/Checkbox'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
-
-const CMMC_LEVELS = [
-  { value: '1', label: 'Level 1 - Foundational (15 practices, self-assessment)' },
-  { value: '2', label: 'Level 2 - Advanced (110 practices, C3PAO assessment)' },
-  { value: '3', label: 'Level 3 - Expert (110+ practices, DIBCAC assessment)' },
-]
-
-const ASSESSMENT_TYPES = [
-  { value: 'self', label: 'Self-Assessment' },
-  { value: 'c3pao', label: 'C3PAO Assessment' },
-  { value: 'dibcac', label: 'DIBCAC Assessment' },
-]
-
-const US_STATES = [
-  { value: 'AL', label: 'Alabama' },
-  { value: 'AK', label: 'Alaska' },
-  { value: 'AZ', label: 'Arizona' },
-  { value: 'AR', label: 'Arkansas' },
-  { value: 'CA', label: 'California' },
-  { value: 'CO', label: 'Colorado' },
-  { value: 'CT', label: 'Connecticut' },
-  { value: 'DE', label: 'Delaware' },
-  { value: 'FL', label: 'Florida' },
-  { value: 'GA', label: 'Georgia' },
-  { value: 'HI', label: 'Hawaii' },
-  { value: 'ID', label: 'Idaho' },
-  { value: 'IL', label: 'Illinois' },
-  { value: 'IN', label: 'Indiana' },
-  { value: 'IA', label: 'Iowa' },
-  { value: 'KS', label: 'Kansas' },
-  { value: 'KY', label: 'Kentucky' },
-  { value: 'LA', label: 'Louisiana' },
-  { value: 'ME', label: 'Maine' },
-  { value: 'MD', label: 'Maryland' },
-  { value: 'MA', label: 'Massachusetts' },
-  { value: 'MI', label: 'Michigan' },
-  { value: 'MN', label: 'Minnesota' },
-  { value: 'MS', label: 'Mississippi' },
-  { value: 'MO', label: 'Missouri' },
-  { value: 'MT', label: 'Montana' },
-  { value: 'NE', label: 'Nebraska' },
-  { value: 'NV', label: 'Nevada' },
-  { value: 'NH', label: 'New Hampshire' },
-  { value: 'NJ', label: 'New Jersey' },
-  { value: 'NM', label: 'New Mexico' },
-  { value: 'NY', label: 'New York' },
-  { value: 'NC', label: 'North Carolina' },
-  { value: 'ND', label: 'North Dakota' },
-  { value: 'OH', label: 'Ohio' },
-  { value: 'OK', label: 'Oklahoma' },
-  { value: 'OR', label: 'Oregon' },
-  { value: 'PA', label: 'Pennsylvania' },
-  { value: 'RI', label: 'Rhode Island' },
-  { value: 'SC', label: 'South Carolina' },
-  { value: 'SD', label: 'South Dakota' },
-  { value: 'TN', label: 'Tennessee' },
-  { value: 'TX', label: 'Texas' },
-  { value: 'UT', label: 'Utah' },
-  { value: 'VT', label: 'Vermont' },
-  { value: 'VA', label: 'Virginia' },
-  { value: 'WA', label: 'Washington' },
-  { value: 'WV', label: 'West Virginia' },
-  { value: 'WI', label: 'Wisconsin' },
-  { value: 'WY', label: 'Wyoming' },
-  { value: 'DC', label: 'Washington D.C.' },
-]
+import { US_STATES, CMMC_LEVELS_EXTENDED, ASSESSMENT_TYPES } from '@/constants'
 
 interface CompanyFormProps {
   naicsCodes: { code: string; title: string }[]
@@ -173,15 +110,13 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
                 defaultValue={initialData?.phone}
               />
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
+                <Textarea
                   name="description"
+                  label="Description"
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   placeholder="Brief description of your company and services..."
                   defaultValue={initialData?.description}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -220,10 +155,11 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
               <Select
                 name="state"
                 label="State *"
-                options={US_STATES}
+                options={[...US_STATES]}
                 placeholder="Select state"
                 required
                 defaultValue={initialData?.state}
+                disabled={isSubmitting}
               />
               <Input
                 name="zip_code"
@@ -245,18 +181,20 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
               <Select
                 name="cmmc_level"
                 label="CMMC Level *"
-                options={CMMC_LEVELS}
+                options={[...CMMC_LEVELS_EXTENDED]}
                 placeholder="Select certification level"
                 required
                 defaultValue={initialData?.cmmc_level?.toString()}
+                disabled={isSubmitting}
               />
               <Select
                 name="assessment_type"
                 label="Assessment Type *"
-                options={ASSESSMENT_TYPES}
+                options={[...ASSESSMENT_TYPES]}
                 placeholder="Select assessment type"
                 required
                 defaultValue={initialData?.assessment_type}
+                disabled={isSubmitting}
               />
               <Input
                 name="certification_date"
