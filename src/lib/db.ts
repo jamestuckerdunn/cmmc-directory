@@ -3,6 +3,45 @@ import { sql } from '@vercel/postgres'
 // Re-export sql for direct queries
 export { sql }
 
+// Field mapping configuration for dynamic SQL updates
+interface FieldMapping {
+  dbColumn: string
+  value: unknown
+}
+
+// Helper to build dynamic UPDATE SQL
+function buildDynamicUpdate(
+  table: string,
+  whereColumn: string,
+  whereValue: unknown,
+  fields: FieldMapping[]
+): { query: string; values: unknown[] } | null {
+  const updates: string[] = []
+  const values: unknown[] = []
+  let paramIndex = 1
+
+  for (const field of fields) {
+    if (field.value !== undefined) {
+      updates.push(`${field.dbColumn} = $${paramIndex++}`)
+      values.push(field.value)
+    }
+  }
+
+  if (updates.length === 0) return null
+
+  updates.push(`updated_at = NOW()`)
+  values.push(whereValue)
+
+  const query = `
+    UPDATE ${table}
+    SET ${updates.join(', ')}
+    WHERE ${whereColumn} = $${paramIndex}
+    RETURNING *
+  `
+
+  return { query, values }
+}
+
 // Helper function to get a user by Clerk ID
 export async function getUserByClerkId(clerkId: string) {
   const { rows } = await sql`
@@ -43,48 +82,18 @@ export async function updateUser(clerkId: string, data: {
   subscriptionStatus?: string
   subscriptionEndDate?: string | null
 }) {
-  const updates: string[] = []
-  const values: (string | number | boolean | null)[] = []
-  let paramIndex = 1
+  const result = buildDynamicUpdate('users', 'clerk_id', clerkId, [
+    { dbColumn: 'email', value: data.email },
+    { dbColumn: 'first_name', value: data.firstName },
+    { dbColumn: 'last_name', value: data.lastName },
+    { dbColumn: 'stripe_customer_id', value: data.stripeCustomerId },
+    { dbColumn: 'subscription_status', value: data.subscriptionStatus },
+    { dbColumn: 'subscription_end_date', value: data.subscriptionEndDate },
+  ])
 
-  if (data.email !== undefined) {
-    updates.push(`email = $${paramIndex++}`)
-    values.push(data.email)
-  }
-  if (data.firstName !== undefined) {
-    updates.push(`first_name = $${paramIndex++}`)
-    values.push(data.firstName)
-  }
-  if (data.lastName !== undefined) {
-    updates.push(`last_name = $${paramIndex++}`)
-    values.push(data.lastName)
-  }
-  if (data.stripeCustomerId !== undefined) {
-    updates.push(`stripe_customer_id = $${paramIndex++}`)
-    values.push(data.stripeCustomerId)
-  }
-  if (data.subscriptionStatus !== undefined) {
-    updates.push(`subscription_status = $${paramIndex++}`)
-    values.push(data.subscriptionStatus)
-  }
-  if (data.subscriptionEndDate !== undefined) {
-    updates.push(`subscription_end_date = $${paramIndex++}`)
-    values.push(data.subscriptionEndDate)
-  }
+  if (!result) return null
 
-  if (updates.length === 0) return null
-
-  updates.push(`updated_at = NOW()`)
-  values.push(clerkId)
-
-  const query = `
-    UPDATE users
-    SET ${updates.join(', ')}
-    WHERE clerk_id = $${paramIndex}
-    RETURNING *
-  `
-
-  const { rows } = await sql.query(query, values)
+  const { rows } = await sql.query(result.query, result.values)
   return rows[0]
 }
 
@@ -336,31 +345,13 @@ export async function updateUserById(id: string, data: {
   subscriptionStatus?: string
   subscriptionEndDate?: string | null
 }) {
-  const updates: string[] = []
-  const values: unknown[] = []
-  let paramIndex = 1
+  const result = buildDynamicUpdate('users', 'id', id, [
+    { dbColumn: 'subscription_status', value: data.subscriptionStatus },
+    { dbColumn: 'subscription_end_date', value: data.subscriptionEndDate },
+  ])
 
-  if (data.subscriptionStatus !== undefined) {
-    updates.push(`subscription_status = $${paramIndex++}`)
-    values.push(data.subscriptionStatus)
-  }
-  if (data.subscriptionEndDate !== undefined) {
-    updates.push(`subscription_end_date = $${paramIndex++}`)
-    values.push(data.subscriptionEndDate)
-  }
+  if (!result) return null
 
-  if (updates.length === 0) return null
-
-  updates.push(`updated_at = NOW()`)
-  values.push(id)
-
-  const query = `
-    UPDATE users
-    SET ${updates.join(', ')}
-    WHERE id = $${paramIndex}
-    RETURNING *
-  `
-
-  const { rows } = await sql.query(query, values)
+  const { rows } = await sql.query(result.query, result.values)
   return rows[0]
 }

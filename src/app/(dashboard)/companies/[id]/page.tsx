@@ -19,10 +19,13 @@ export default async function CompanyDetailPage({ params }: CompanyDetailPagePro
 
   const { id } = await params
 
-  const user = await getUserByClerkId(userId)
-  if (!user) redirect('/sign-in')
+  // Parallelize independent database queries
+  const [user, company] = await Promise.all([
+    getUserByClerkId(userId),
+    getCompanyById(id),
+  ])
 
-  const company = await getCompanyById(id)
+  if (!user) redirect('/sign-in')
 
   if (!company || company.user_id !== user.id) {
     notFound()

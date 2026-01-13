@@ -28,7 +28,8 @@ export async function POST(req: Request) {
       'svix-timestamp': svixTimestamp,
       'svix-signature': svixSignature,
     }) as WebhookEvent
-  } catch {
+  } catch (error) {
+    console.error('[Clerk Webhook] Verification failed:', error instanceof Error ? error.message : 'Unknown error')
     return new Response('Verification failed', { status: 400 })
   }
 
@@ -64,7 +65,8 @@ export async function POST(req: Request) {
         break
       }
     }
-  } catch {
+  } catch (error) {
+    console.error(`[Clerk Webhook] Failed to process ${type}:`, error instanceof Error ? error.message : 'Unknown error')
     return new Response('Failed to process webhook', { status: 500 })
   }
 

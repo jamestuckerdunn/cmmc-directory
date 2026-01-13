@@ -71,7 +71,8 @@ export async function POST(req: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
-  } catch {
+  } catch (error) {
+    console.error('[Stripe Webhook] Signature verification failed:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
@@ -85,7 +86,8 @@ export async function POST(req: Request) {
         if (customer && !customer.deleted && customer.email) {
           await sendWelcomeEmail(customer.email, customer.name || 'there')
         }
-      } catch {
+      } catch (error) {
+        console.error('[Stripe Webhook] Failed to send welcome email:', error instanceof Error ? error.message : 'Unknown error')
         // Email sending failed - subscription still proceeds
       }
 

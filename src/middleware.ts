@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export default function middleware(req: NextRequest) {
+export default function middleware(_req: NextRequest) {
   // Simple passthrough middleware
   // Authentication is handled at the page/API route level
   return NextResponse.next()

@@ -37,23 +37,23 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     return <SubscriptionGate />
   }
 
-  const companies = await getCompanies({
-    status: 'verified',
+  // Parallelize independent database queries for better performance
+  const filterParams = {
+    status: 'verified' as const,
     cmmcLevel: params.level ? parseInt(params.level, 10) : undefined,
     state: params.state,
     search: params.search,
-    limit: perPage,
-    offset: (page - 1) * perPage,
-  })
+  }
 
-  const count = await countCompanies({
-    status: 'verified',
-    cmmcLevel: params.level ? parseInt(params.level, 10) : undefined,
-    state: params.state,
-    search: params.search,
-  })
-
-  const naicsCodes = await getNaicsCodes()
+  const [companies, count, naicsCodes] = await Promise.all([
+    getCompanies({
+      ...filterParams,
+      limit: perPage,
+      offset: (page - 1) * perPage,
+    }),
+    countCompanies(filterParams),
+    getNaicsCodes(),
+  ])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

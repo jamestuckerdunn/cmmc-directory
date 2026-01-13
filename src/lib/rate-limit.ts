@@ -3,66 +3,84 @@ import { Redis } from '@upstash/redis'
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
-// Rate limiter instance (lazy initialization)
-let ratelimit: Ratelimit | null = null
+// Different rate limit configurations
+export const rateLimitConfigs = {
+  // Strict limit for sensitive operations (login, checkout)
+  strict: { requests: 5, window: '60 s' as const },
+  // Standard limit for API calls
+  standard: { requests: 20, window: '60 s' as const },
+  // Relaxed limit for read operations
+  relaxed: { requests: 100, window: '60 s' as const },
+} as const
 
-function getRateLimiter(): Ratelimit | null {
-  if (ratelimit) return ratelimit
+export type RateLimitConfig = keyof typeof rateLimitConfigs
+
+// Rate limiter instances (lazy initialization, one per config)
+const rateLimiters: Partial<Record<RateLimitConfig, Ratelimit>> = {}
+let redisClient: Redis | null = null
+let redisConfigured: boolean | null = null
+
+function getRedisClient(): Redis | null {
+  if (redisClient) return redisClient
 
   const redisUrl = process.env.UPSTASH_REDIS_REST_URL
   const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN
 
   if (!redisUrl || !redisToken) {
-    console.warn('Rate limiting disabled: UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not configured')
+    if (redisConfigured === null) {
+      console.warn('Rate limiting disabled: UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not configured')
+      redisConfigured = false
+    }
     return null
   }
 
-  const redis = new Redis({
+  redisClient = new Redis({
     url: redisUrl,
     token: redisToken,
   })
+  redisConfigured = true
 
-  ratelimit = new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(10, '10 s'), // 10 requests per 10 seconds
-    analytics: true,
-    prefix: 'cmmc-directory',
-  })
-
-  return ratelimit
+  return redisClient
 }
 
-// Different rate limit configurations
-export const rateLimitConfigs = {
-  // Strict limit for sensitive operations
-  strict: { requests: 5, window: '60 s' },
-  // Standard limit for API calls
-  standard: { requests: 20, window: '60 s' },
-  // Relaxed limit for read operations
-  relaxed: { requests: 100, window: '60 s' },
-} as const
+function getRateLimiter(config: RateLimitConfig): Ratelimit | null {
+  // Return cached limiter if exists
+  if (rateLimiters[config]) return rateLimiters[config]!
 
-export type RateLimitConfig = keyof typeof rateLimitConfigs
+  const redis = getRedisClient()
+  if (!redis) return null
+
+  const { requests, window } = rateLimitConfigs[config]
+
+  rateLimiters[config] = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(requests, window),
+    analytics: true,
+    prefix: `cmmc-directory:${config}`,
+  })
+
+  return rateLimiters[config]!
+}
 
 export async function rateLimit(
   identifier: string,
   config: RateLimitConfig = 'standard'
 ): Promise<{ success: boolean; limit?: number; remaining?: number; reset?: number }> {
-  const limiter = getRateLimiter()
+  const limiter = getRateLimiter(config)
 
   if (!limiter) {
-    // Rate limiting disabled, allow all requests
+    // Rate limiting disabled (no Redis configured), allow all requests
     return { success: true }
   }
 
   try {
-    const { success, limit, remaining, reset } = await limiter.limit(
-      `${config}:${identifier}`
-    )
+    const { success, limit, remaining, reset } = await limiter.limit(identifier)
 
     return { success, limit, remaining, reset }
-  } catch {
-    // On error, allow the request to proceed
+  } catch (error) {
+    // Log the error for monitoring but allow the request
+    // This prevents Redis outages from breaking the entire application
+    console.error('Rate limiting error (allowing request):', error instanceof Error ? error.message : 'Unknown error')
     return { success: true }
   }
 }
@@ -83,7 +101,11 @@ export async function getClientIdentifier(): Promise<string> {
 }
 
 // Rate limit response helper
-export function rateLimitExceededResponse(reset?: number) {
+export function rateLimitExceededResponse(
+  reset?: number,
+  limit?: number,
+  remaining?: number
+) {
   const retryAfter = reset ? Math.ceil((reset - Date.now()) / 1000) : 60
 
   return NextResponse.json(
@@ -96,8 +118,8 @@ export function rateLimitExceededResponse(reset?: number) {
       status: 429,
       headers: {
         'Retry-After': String(retryAfter),
-        'X-RateLimit-Limit': '10',
-        'X-RateLimit-Remaining': '0',
+        'X-RateLimit-Limit': String(limit ?? 'unknown'),
+        'X-RateLimit-Remaining': String(remaining ?? 0),
       },
     }
   )
@@ -109,10 +131,10 @@ export async function withRateLimit(
   config: RateLimitConfig = 'standard'
 ): Promise<NextResponse> {
   const identifier = await getClientIdentifier()
-  const { success, reset } = await rateLimit(identifier, config)
+  const { success, reset, limit, remaining } = await rateLimit(identifier, config)
 
   if (!success) {
-    return rateLimitExceededResponse(reset)
+    return rateLimitExceededResponse(reset, limit, remaining)
   }
 
   return handler()

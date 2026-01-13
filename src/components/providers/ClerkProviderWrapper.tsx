@@ -1,17 +1,45 @@
 'use client'
 
-import { ClerkProvider } from '@clerk/nextjs'
-import { createContext, useContext } from 'react'
+import { ClerkProvider, useUser as useClerkUser } from '@clerk/nextjs'
+import { createContext, useContext, type ReactNode } from 'react'
+import type { UserResource } from '@clerk/types'
 
 interface ClerkProviderWrapperProps {
-  children: React.ReactNode
+  children: ReactNode
 }
 
-// Context to check if Clerk is configured
-const ClerkConfigContext = createContext<boolean>(false)
+interface ClerkContextValue {
+  isConfigured: boolean
+  user: UserResource | null | undefined
+  isLoaded: boolean
+}
+
+// Context to check if Clerk is configured and provide user data safely
+const ClerkConfigContext = createContext<ClerkContextValue>({
+  isConfigured: false,
+  user: null,
+  isLoaded: true,
+})
 
 export function useClerkConfigured() {
-  return useContext(ClerkConfigContext)
+  return useContext(ClerkConfigContext).isConfigured
+}
+
+// Safe hook to get user data - works whether Clerk is configured or not
+export function useSafeUser() {
+  const { isConfigured, user, isLoaded } = useContext(ClerkConfigContext)
+  return { isConfigured, user, isLoaded }
+}
+
+// Inner component that can safely use Clerk hooks (runs inside ClerkProvider)
+function ClerkUserProvider({ children }: { children: ReactNode }) {
+  const { user, isLoaded } = useClerkUser()
+
+  return (
+    <ClerkConfigContext.Provider value={{ isConfigured: true, user, isLoaded }}>
+      {children}
+    </ClerkConfigContext.Provider>
+  )
 }
 
 export function ClerkProviderWrapper({ children }: ClerkProviderWrapperProps) {
@@ -21,17 +49,17 @@ export function ClerkProviderWrapper({ children }: ClerkProviderWrapperProps) {
   // Skip Clerk if using placeholder key (for build without real credentials)
   if (!isConfigured) {
     return (
-      <ClerkConfigContext.Provider value={false}>
+      <ClerkConfigContext.Provider value={{ isConfigured: false, user: null, isLoaded: true }}>
         {children}
       </ClerkConfigContext.Provider>
     )
   }
 
   return (
-    <ClerkConfigContext.Provider value={true}>
-      <ClerkProvider>
+    <ClerkProvider>
+      <ClerkUserProvider>
         {children}
-      </ClerkProvider>
-    </ClerkConfigContext.Provider>
+      </ClerkUserProvider>
+    </ClerkProvider>
   )
 }

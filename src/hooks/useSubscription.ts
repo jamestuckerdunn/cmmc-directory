@@ -1,8 +1,7 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
 import { useEffect, useState, useCallback } from 'react'
-import { useClerkConfigured } from '@/components/providers/ClerkProviderWrapper'
+import { useSafeUser } from '@/components/providers/ClerkProviderWrapper'
 
 interface SubscriptionState {
   isSubscribed: boolean
@@ -29,24 +28,12 @@ function isValidRedirectUrl(url: string): boolean {
 }
 
 export function useSubscription(): SubscriptionState {
-  const isClerkConfigured = useClerkConfigured()
+  // Use the safe hook that works whether Clerk is configured or not
+  const { isConfigured: isClerkConfigured, user, isLoaded } = useSafeUser()
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
-
-  // This is safe because when Clerk is not configured,
-  // ClerkProvider isn't mounted and useUser won't be called
-  // in a component that requires it
-  let user = null
-  let isLoaded = true
-
-  if (isClerkConfigured) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const clerkData = useUser()
-    user = clerkData.user
-    isLoaded = clerkData.isLoaded
-  }
 
   useEffect(() => {
     if (!isClerkConfigured) {

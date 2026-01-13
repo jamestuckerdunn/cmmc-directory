@@ -1,9 +1,13 @@
 import type { Metadata } from 'next'
+import { cache } from 'react'
 import { auth } from '@clerk/nextjs/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getUserByClerkId, getCompanyById, getCompanyNaicsCodes } from '@/lib/db'
+
+// Cache getCompanyById to deduplicate calls between generateMetadata and page component
+const getCachedCompany = cache(getCompanyById)
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -21,7 +25,7 @@ export async function generateMetadata(
   { params }: DirectoryCompanyPageProps
 ): Promise<Metadata> {
   const { id } = await params
-  const company = await getCompanyById(id)
+  const company = await getCachedCompany(id)
 
   if (!company || company.status !== 'verified') {
     return {
@@ -58,7 +62,7 @@ export default async function DirectoryCompanyPage({ params }: DirectoryCompanyP
     return <SubscriptionGate />
   }
 
-  const company = await getCompanyById(id)
+  const company = await getCachedCompany(id)
 
   if (!company || company.status !== 'verified') {
     notFound()
