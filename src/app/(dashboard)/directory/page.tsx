@@ -1,9 +1,15 @@
+import type { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { getUserByClerkId, getCompanies, countCompanies, getNaicsCodes } from '@/lib/db'
 import { CompanyList } from '@/components/directory/CompanyList'
 import { SearchFilters } from '@/components/directory/SearchFilters'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+
+export const metadata: Metadata = {
+  title: 'Company Directory',
+  description: 'Browse and search CMMC certified defense contractors. Filter by certification level, location, and NAICS codes.',
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +28,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   if (!userId) redirect('/sign-in')
 
   const params = await searchParams
-  const page = parseInt(params.page || '1')
+  const page = parseInt(params.page || '1', 10)
   const perPage = 12
 
   const user = await getUserByClerkId(userId)
@@ -33,7 +39,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
 
   const companies = await getCompanies({
     status: 'verified',
-    cmmcLevel: params.level ? parseInt(params.level) : undefined,
+    cmmcLevel: params.level ? parseInt(params.level, 10) : undefined,
     state: params.state,
     search: params.search,
     limit: perPage,
@@ -42,7 +48,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
 
   const count = await countCompanies({
     status: 'verified',
-    cmmcLevel: params.level ? parseInt(params.level) : undefined,
+    cmmcLevel: params.level ? parseInt(params.level, 10) : undefined,
     state: params.state,
     search: params.search,
   })

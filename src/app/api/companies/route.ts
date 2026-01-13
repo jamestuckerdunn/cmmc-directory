@@ -2,81 +2,94 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { getUserByClerkId, createCompany, updateCompany, setCompanyNaicsCodes } from '@/lib/db'
 import { sendCompanySubmittedEmail } from '@/lib/resend'
-
-interface CompanyRequestBody {
-  name: string
-  description?: string
-  website?: string
-  email?: string
-  phone?: string
-  address_line1: string
-  address_line2?: string
-  city: string
-  state: string
-  zip_code: string
-  cmmc_level: number
-  certification_date?: string
-  certification_expiry?: string
-  assessment_type?: string
-  c3pao_name?: string
-  naics_codes?: string[]
-}
-
-function mapCompanyData(data: Omit<CompanyRequestBody, 'naics_codes'>) {
-  return {
-    name: data.name,
-    description: data.description,
-    website: data.website,
-    email: data.email,
-    phone: data.phone,
-    addressLine1: data.address_line1,
-    addressLine2: data.address_line2,
-    city: data.city,
-    state: data.state,
-    zipCode: data.zip_code,
-    cmmcLevel: data.cmmc_level,
-    certificationDate: data.certification_date,
-    certificationExpiry: data.certification_expiry,
-    assessmentType: data.assessment_type,
-    c3paoName: data.c3pao_name,
-  }
-}
+import { companySchemaWithDateValidation, formatZodErrors, idSchema } from '@/lib/validations'
+import { rateLimit, getClientIdentifier, rateLimitExceededResponse } from '@/lib/rate-limit'
 
 export async function POST(req: Request) {
   try {
+    // Rate limiting
+    const clientId = await getClientIdentifier()
+    const { success: rateLimitSuccess, reset } = await rateLimit(clientId, 'standard')
+    if (!rateLimitSuccess) {
+      return rateLimitExceededResponse(reset)
+    }
+
+    // Content-Type validation
+    const contentType = req.headers.get('content-type')
+    if (!contentType?.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Content-Type must be application/json' },
+        { status: 415 }
+      )
+    }
+
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get database user
     const dbUser = await getUserByClerkId(userId)
+
     if (!dbUser || dbUser.subscription_status !== 'active') {
       return NextResponse.json({ error: 'Active subscription required' }, { status: 403 })
     }
 
-    const body: CompanyRequestBody = await req.json()
-    const { naics_codes, ...companyData } = body
+    let body: unknown
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
 
+    // Validate input
+    const validationResult = companySchemaWithDateValidation.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: formatZodErrors(validationResult.error) },
+        { status: 400 }
+      )
+    }
+
+    const { naics_codes, ...companyData } = validationResult.data
+
+    // Insert company
     const company = await createCompany({
       userId: dbUser.id,
-      ...mapCompanyData(companyData),
+      name: companyData.name,
+      description: companyData.description,
+      website: companyData.website || null,
+      email: companyData.email || null,
+      phone: companyData.phone || null,
+      addressLine1: companyData.address_line1,
+      addressLine2: companyData.address_line2,
+      city: companyData.city,
+      state: companyData.state || null,
+      zipCode: companyData.zip_code || null,
+      cmmcLevel: companyData.cmmc_level,
+      certificationDate: companyData.certification_date,
+      certificationExpiry: companyData.certification_expiry,
+      assessmentType: companyData.assessment_type || null,
+      c3paoName: companyData.c3pao_name,
     })
 
     if (!company) {
       return NextResponse.json({ error: 'Failed to create company' }, { status: 500 })
     }
 
-    if (naics_codes?.length) {
+    // Insert NAICS codes
+    if (naics_codes && naics_codes.length > 0) {
       await setCompanyNaicsCodes(company.id, naics_codes)
     }
 
+    // Send confirmation email
     try {
       await sendCompanySubmittedEmail(dbUser.email, company.name)
     } catch {
-      // Email is non-critical
+      // Email sending failed - company creation still succeeds
     }
 
-    return NextResponse.json({ id: company.id })
+    return NextResponse.json({ id: company.id }, { status: 201 })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
@@ -84,24 +97,83 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    // Rate limiting
+    const clientId = await getClientIdentifier()
+    const { success: rateLimitSuccess, reset } = await rateLimit(clientId, 'standard')
+    if (!rateLimitSuccess) {
+      return rateLimitExceededResponse(reset)
+    }
+
+    // Content-Type validation
+    const contentType = req.headers.get('content-type')
+    if (!contentType?.includes('application/json')) {
+      return NextResponse.json(
+        { error: 'Content-Type must be application/json' },
+        { status: 415 }
+      )
+    }
+
     const { userId } = await auth()
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const dbUser = await getUserByClerkId(userId)
+
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const body: CompanyRequestBody & { id: string } = await req.json()
-    const { id, naics_codes, ...companyData } = body
-
-    const updated = await updateCompany(id, dbUser.id, mapCompanyData(companyData))
-    if (!updated) {
-      return NextResponse.json({ error: 'Company not found' }, { status: 404 })
+    let body: unknown
+    try {
+      body = await req.json()
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
     }
 
+    // Validate ID separately
+    const bodyObj = body as Record<string, unknown>
+    const idValidation = idSchema.safeParse(bodyObj.id)
+    if (!idValidation.success) {
+      return NextResponse.json({ error: 'Invalid company ID' }, { status: 400 })
+    }
+
+    // Validate company data
+    const validationResult = companySchemaWithDateValidation.safeParse(body)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: formatZodErrors(validationResult.error) },
+        { status: 400 }
+      )
+    }
+
+    const { naics_codes, ...companyData } = validationResult.data
+    const id = idValidation.data
+
+    // Update company (updateCompany verifies ownership)
+    const updated = await updateCompany(id, dbUser.id, {
+      name: companyData.name,
+      description: companyData.description,
+      website: companyData.website || null,
+      email: companyData.email || null,
+      phone: companyData.phone || null,
+      addressLine1: companyData.address_line1,
+      addressLine2: companyData.address_line2,
+      city: companyData.city,
+      state: companyData.state || null,
+      zipCode: companyData.zip_code || null,
+      cmmcLevel: companyData.cmmc_level,
+      certificationDate: companyData.certification_date,
+      certificationExpiry: companyData.certification_expiry,
+      assessmentType: companyData.assessment_type || null,
+      c3paoName: companyData.c3pao_name,
+    })
+
+    if (!updated) {
+      return NextResponse.json({ error: 'Company not found or access denied' }, { status: 404 })
+    }
+
+    // Update NAICS codes
     if (naics_codes) {
       await setCompanyNaicsCodes(id, naics_codes)
     }

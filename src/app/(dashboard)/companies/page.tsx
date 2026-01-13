@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -6,6 +7,15 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { SubscriptionGate } from '@/components/SubscriptionGate'
+
+export const metadata: Metadata = {
+  title: 'My Companies',
+  description: 'Manage your registered CMMC certified companies and their verification status.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export const dynamic = 'force-dynamic'
 

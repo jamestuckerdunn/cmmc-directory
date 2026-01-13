@@ -3,6 +3,7 @@
 import { useSubscription } from '@/hooks/useSubscription'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { SUBSCRIPTION_PRICE } from '@/constants'
 
 export function SubscriptionGate() {
   const { createCheckout, isLoading } = useSubscription()
@@ -20,13 +21,13 @@ export function SubscriptionGate() {
             Subscribe to Access the Directory
           </h2>
           <p className="text-gray-600 mb-6">
-            Get unlimited access to our database of CMMC certified companies for just $10/month.
+            Get unlimited access to our database of CMMC certified companies for just ${SUBSCRIPTION_PRICE}/month.
           </p>
         </div>
 
         <div className="bg-gray-50 rounded-lg p-6 mb-6">
           <div className="text-4xl font-bold text-navy-800 mb-2">
-            $10<span className="text-lg font-normal text-gray-600">/month</span>
+            ${SUBSCRIPTION_PRICE}<span className="text-lg font-normal text-gray-600">/month</span>
           </div>
           <ul className="text-left space-y-2 text-gray-600">
             <li className="flex items-center">

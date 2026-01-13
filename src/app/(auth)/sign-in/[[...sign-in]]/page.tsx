@@ -1,4 +1,10 @@
+import type { Metadata } from 'next'
 import { SignIn } from '@clerk/nextjs'
+
+export const metadata: Metadata = {
+  title: 'Sign In',
+  description: 'Sign in to your CMMC Directory account to access the directory and manage your company listings.',
+}
 
 export default function SignInPage() {
   return (

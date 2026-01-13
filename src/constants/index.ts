@@ -1,6 +1,5 @@
-import type { SelectOption } from '@/types'
-
-export const US_STATES: SelectOption[] = [
+// US States list for forms and filters
+export const US_STATES = [
   { value: 'AL', label: 'Alabama' },
   { value: 'AK', label: 'Alaska' },
   { value: 'AZ', label: 'Arizona' },
@@ -52,24 +51,103 @@ export const US_STATES: SelectOption[] = [
   { value: 'WI', label: 'Wisconsin' },
   { value: 'WY', label: 'Wyoming' },
   { value: 'DC', label: 'Washington D.C.' },
-]
+] as const
 
-export const CMMC_LEVELS: SelectOption[] = [
+// CMMC Levels - Short version for filters
+export const CMMC_LEVELS = [
   { value: '1', label: 'Level 1 - Foundational' },
   { value: '2', label: 'Level 2 - Advanced' },
   { value: '3', label: 'Level 3 - Expert' },
-]
+] as const
 
-export const CMMC_LEVELS_DETAILED: SelectOption[] = [
+// CMMC Levels - Extended version for forms
+export const CMMC_LEVELS_EXTENDED = [
   { value: '1', label: 'Level 1 - Foundational (15 practices, self-assessment)' },
   { value: '2', label: 'Level 2 - Advanced (110 practices, C3PAO assessment)' },
   { value: '3', label: 'Level 3 - Expert (110+ practices, DIBCAC assessment)' },
-]
+] as const
 
-export const ASSESSMENT_TYPES: SelectOption[] = [
+export const CMMC_LEVEL_DETAILS = {
+  1: {
+    name: 'Level 1 - Foundational',
+    description: 'Basic cyber hygiene practices for protecting Federal Contract Information (FCI)',
+    practices: 17,
+    assessment: 'Self-assessment',
+    color: 'blue',
+  },
+  2: {
+    name: 'Level 2 - Advanced',
+    description: 'Advanced practices for protecting Controlled Unclassified Information (CUI)',
+    practices: 110,
+    assessment: 'Third-party assessment (C3PAO)',
+    color: 'purple',
+  },
+  3: {
+    name: 'Level 3 - Expert',
+    description: 'Expert practices for enhanced protection of CUI against advanced threats',
+    practices: 134,
+    assessment: 'Government-led assessment',
+    color: 'navy',
+  },
+} as const
+
+// Assessment Types
+export const ASSESSMENT_TYPES = [
   { value: 'self', label: 'Self-Assessment' },
   { value: 'c3pao', label: 'C3PAO Assessment' },
   { value: 'dibcac', label: 'DIBCAC Assessment' },
-]
+] as const
 
-export const ITEMS_PER_PAGE = 12
+// Pagination
+export const DEFAULT_PAGE_SIZE = 12
+export const MAX_PAGE_SIZE = 100
+export const MAX_PAGE_NUMBER = 1000
+
+// Rate Limiting
+export const RATE_LIMIT_REQUESTS = 10
+export const RATE_LIMIT_WINDOW_SECONDS = 10
+
+// Validation Limits
+export const MAX_COMPANY_NAME_LENGTH = 255
+export const MAX_DESCRIPTION_LENGTH = 2000
+export const MAX_ADDRESS_LENGTH = 255
+export const MAX_PHONE_LENGTH = 20
+
+// Email Configuration
+export const SUPPORT_EMAIL = 'support@cmmcdirectory.com'
+export const NOREPLY_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@cmmcdirectory.com'
+
+// URLs
+export const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cmmcdirectory.com'
+
+// Subscription
+export const SUBSCRIPTION_PRICE = 10 // USD per month
+export const SUBSCRIPTION_PRICE_ID = process.env.STRIPE_PRICE_ID
+
+// Status to Badge variant mapping
+export const STATUS_BADGE_VARIANTS = {
+  verified: 'success',
+  approved: 'success',
+  active: 'success',
+  pending: 'warning',
+  rejected: 'error',
+  expired: 'error',
+  inactive: 'error',
+} as const
+
+// CMMC Level to Badge variant mapping
+export const LEVEL_BADGE_VARIANTS = {
+  1: 'level1',
+  2: 'level2',
+  3: 'level3',
+} as const
+
+// Helper function to get status badge variant
+export function getStatusBadgeVariant(status: string): 'success' | 'warning' | 'error' | 'default' {
+  return STATUS_BADGE_VARIANTS[status as keyof typeof STATUS_BADGE_VARIANTS] || 'default'
+}
+
+// Helper function to get CMMC level badge variant
+export function getLevelBadgeVariant(level: number): 'level1' | 'level2' | 'level3' {
+  return LEVEL_BADGE_VARIANTS[level as keyof typeof LEVEL_BADGE_VARIANTS] || 'level1'
+}

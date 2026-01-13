@@ -20,12 +20,13 @@ interface SearchFiltersProps {
 
 export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps) {
   const router = useRouter()
+
   const [search, setSearch] = useState(currentFilters.search || '')
   const [level, setLevel] = useState(currentFilters.level || '')
   const [state, setState] = useState(currentFilters.state || '')
   const [naics, setNaics] = useState(currentFilters.naics || '')
 
-  function handleApplyFilters() {
+  const applyFilters = () => {
     const params = new URLSearchParams()
     if (search) params.set('search', search)
     if (level) params.set('level', level)
@@ -34,7 +35,7 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
     router.push(`/directory?${params.toString()}`)
   }
 
-  function handleClearFilters() {
+  const clearFilters = () => {
     setSearch('')
     setLevel('')
     setState('')
@@ -42,9 +43,9 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
     router.push('/directory')
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleApplyFilters()
+      applyFilters()
     }
   }
 
@@ -63,7 +64,7 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
 
         <Select
           label="CMMC Level"
-          options={CMMC_LEVELS}
+          options={[...CMMC_LEVELS]}
           placeholder="Any level"
           value={level}
           onChange={(e) => setLevel(e.target.value)}
@@ -71,7 +72,7 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
 
         <Select
           label="State"
-          options={US_STATES}
+          options={[...US_STATES]}
           placeholder="Any state"
           value={state}
           onChange={(e) => setState(e.target.value)}
@@ -86,10 +87,10 @@ export function SearchFilters({ naicsCodes, currentFilters }: SearchFiltersProps
         />
 
         <div className="flex flex-col space-y-2">
-          <Button onClick={handleApplyFilters}>
+          <Button onClick={applyFilters}>
             Apply Filters
           </Button>
-          <Button variant="ghost" onClick={handleClearFilters}>
+          <Button variant="ghost" onClick={clearFilters}>
             Clear Filters
           </Button>
         </div>

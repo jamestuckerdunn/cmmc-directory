@@ -6,6 +6,7 @@ import { useClerkConfigured } from '@/components/providers/ClerkProviderWrapper'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { SUBSCRIPTION_PRICE } from '@/constants'
 
 function SettingsContent() {
   const { user, isLoaded } = useUser()
@@ -69,7 +70,7 @@ function SettingsContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">CMMC Directory Access</p>
-                  <p className="text-gray-500">$10/month</p>
+                  <p className="text-gray-500">${SUBSCRIPTION_PRICE}/month</p>
                 </div>
                 <Badge variant={isSubscribed ? 'success' : 'error'}>
                   {isSubscribed ? 'Active' : 'Inactive'}
@@ -115,24 +116,20 @@ function SettingsContent() {
   )
 }
 
-function UnconfiguredPlaceholder() {
-  return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-        <p className="mt-2 text-gray-600">
-          Authentication not configured. Please set up Clerk credentials.
-        </p>
-      </div>
-    </div>
-  )
-}
-
 export default function SettingsPage() {
   const isClerkConfigured = useClerkConfigured()
 
   if (!isClerkConfigured) {
-    return <UnconfiguredPlaceholder />
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
+          <p className="mt-2 text-gray-600">
+            Authentication not configured. Please set up Clerk credentials.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return <SettingsContent />

@@ -1,58 +1,127 @@
 /**
- * Environment variable validation
- * Validates required environment variables at build/runtime
+ * Environment variable validation and configuration
+ * This module provides type-safe access to environment variables
  */
 
-function getEnvVar(name: string, required: boolean = true): string {
-  const value = process.env[name]
-  if (required && !value) {
-    throw new Error(`Missing required environment variable: ${name}`)
-  }
-  return value || ''
-}
-
-// Server-side environment variables (not exposed to client)
-export const serverEnv = {
+interface EnvironmentConfig {
   // Database
-  POSTGRES_URL: () => getEnvVar('POSTGRES_URL'),
+  POSTGRES_URL: string
 
-  // Stripe
-  STRIPE_SECRET_KEY: () => getEnvVar('STRIPE_SECRET_KEY'),
-  STRIPE_WEBHOOK_SECRET: () => getEnvVar('STRIPE_WEBHOOK_SECRET'),
-  STRIPE_PRICE_ID: () => getEnvVar('STRIPE_PRICE_ID'),
+  // App
+  NEXT_PUBLIC_APP_URL: string
+  NODE_ENV: 'development' | 'production' | 'test'
 
-  // Clerk
-  CLERK_SECRET_KEY: () => getEnvVar('CLERK_SECRET_KEY'),
-  CLERK_WEBHOOK_SECRET: () => getEnvVar('CLERK_WEBHOOK_SECRET'),
+  // Authentication (Clerk) - Optional
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?: string
+  CLERK_SECRET_KEY?: string
+  CLERK_WEBHOOK_SECRET?: string
 
-  // Resend (optional)
-  RESEND_API_KEY: () => getEnvVar('RESEND_API_KEY', false),
+  // Payments (Stripe) - Optional
+  STRIPE_SECRET_KEY?: string
+  STRIPE_WEBHOOK_SECRET?: string
+  STRIPE_PRICE_ID?: string
+
+  // Email (Resend) - Optional
+  RESEND_API_KEY?: string
+  EMAIL_FROM?: string
+
+  // Analytics - Optional
+  GOOGLE_SITE_VERIFICATION?: string
+
+  // Rate Limiting (Upstash) - Optional
+  UPSTASH_REDIS_REST_URL?: string
+  UPSTASH_REDIS_REST_TOKEN?: string
 }
 
-// Client-side environment variables (exposed to browser)
-export const clientEnv = {
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '',
-}
-
-// Validate critical environment variables
-export function validateEnv(): void {
-  const errors: string[] = []
-
-  const requiredServerVars = [
-    'POSTGRES_URL',
-    'STRIPE_SECRET_KEY',
-    'STRIPE_WEBHOOK_SECRET',
-    'STRIPE_PRICE_ID',
-  ]
-
-  for (const varName of requiredServerVars) {
-    if (!process.env[varName]) {
-      errors.push(varName)
-    }
+class EnvironmentError extends Error {
+  constructor(message: string, public missing: string[]) {
+    super(message)
+    this.name = 'EnvironmentError'
   }
+}
 
-  if (errors.length > 0 && process.env.NODE_ENV === 'production') {
-    console.error(`Missing required environment variables: ${errors.join(', ')}`)
+/**
+ * Validates that required environment variables are set
+ * Call this early in your application startup
+ */
+export function validateEnvironment(): void {
+  const required = ['POSTGRES_URL', 'NEXT_PUBLIC_APP_URL']
+  const missing = required.filter((key) => !process.env[key])
+
+  if (missing.length > 0) {
+    throw new EnvironmentError(
+      `Missing required environment variables: ${missing.join(', ')}`,
+      missing
+    )
+  }
+}
+
+/**
+ * Get environment configuration with type safety
+ * Returns undefined for optional variables that are not set
+ */
+export function getEnv(): EnvironmentConfig {
+  return {
+    // Required
+    POSTGRES_URL: process.env.POSTGRES_URL!,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL!,
+    NODE_ENV: (process.env.NODE_ENV as EnvironmentConfig['NODE_ENV']) || 'development',
+
+    // Optional - Authentication
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
+
+    // Optional - Payments
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_PRICE_ID: process.env.STRIPE_PRICE_ID,
+
+    // Optional - Email
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    EMAIL_FROM: process.env.EMAIL_FROM || 'CMMC Directory <noreply@cmmcdirectory.com>',
+
+    // Optional - Analytics
+    GOOGLE_SITE_VERIFICATION: process.env.GOOGLE_SITE_VERIFICATION,
+
+    // Optional - Rate Limiting
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+  }
+}
+
+/**
+ * Check if specific services are configured
+ */
+export const serviceStatus = {
+  isClerkConfigured: () =>
+    Boolean(
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY
+    ),
+
+  isStripeConfigured: () =>
+    Boolean(
+      process.env.STRIPE_SECRET_KEY &&
+        process.env.STRIPE_WEBHOOK_SECRET &&
+        process.env.STRIPE_PRICE_ID
+    ),
+
+  isResendConfigured: () => Boolean(process.env.RESEND_API_KEY),
+
+  isRateLimitConfigured: () =>
+    Boolean(
+      process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ),
+}
+
+/**
+ * Get a summary of which services are available
+ */
+export function getServiceStatus(): Record<string, boolean> {
+  return {
+    clerk: serviceStatus.isClerkConfigured(),
+    stripe: serviceStatus.isStripeConfigured(),
+    resend: serviceStatus.isResendConfigured(),
+    rateLimit: serviceStatus.isRateLimitConfigured(),
   }
 }

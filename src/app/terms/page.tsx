@@ -1,5 +1,16 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
+import { SUBSCRIPTION_PRICE } from '@/constants'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service',
+  description: 'Read the terms and conditions for using CMMC Directory services.',
+  openGraph: {
+    title: 'Terms of Service - CMMC Directory',
+    description: 'Read the terms and conditions for using CMMC Directory.',
+  },
+}
 
 export default function TermsPage() {
   return (
@@ -37,7 +48,7 @@ export default function TermsPage() {
 
               <h3>Subscription Plans</h3>
               <p>
-                Access to the CMMC Directory requires a paid subscription. The current subscription rate is $10 per month, billed monthly through our payment processor, Stripe.
+                Access to the CMMC Directory requires a paid subscription. The current subscription rate is ${SUBSCRIPTION_PRICE} per month, billed monthly through our payment processor, Stripe.
               </p>
 
               <h3>Billing</h3>

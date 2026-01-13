@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
+import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
-import { US_STATES, CMMC_LEVELS_DETAILED, ASSESSMENT_TYPES } from '@/constants'
+import { US_STATES, CMMC_LEVELS_EXTENDED, ASSESSMENT_TYPES } from '@/constants'
 
 interface CompanyFormProps {
   naicsCodes: { code: string; title: string }[]
@@ -51,7 +52,7 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
         body: JSON.stringify({
           ...data,
           id: initialData?.id,
-          cmmc_level: parseInt(data.cmmc_level as string),
+          cmmc_level: parseInt(data.cmmc_level as string, 10),
           naics_codes: formData.getAll('naics_codes'),
         }),
       })
@@ -108,15 +109,13 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
                 defaultValue={initialData?.phone}
               />
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
+                <Textarea
                   name="description"
+                  label="Description"
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                   placeholder="Brief description of your company and services..."
                   defaultValue={initialData?.description}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -155,10 +154,11 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
               <Select
                 name="state"
                 label="State *"
-                options={US_STATES}
+                options={[...US_STATES]}
                 placeholder="Select state"
                 required
                 defaultValue={initialData?.state}
+                disabled={isSubmitting}
               />
               <Input
                 name="zip_code"
@@ -180,18 +180,20 @@ export function CompanyForm({ naicsCodes, initialData }: CompanyFormProps) {
               <Select
                 name="cmmc_level"
                 label="CMMC Level *"
-                options={CMMC_LEVELS_DETAILED}
+                options={[...CMMC_LEVELS_EXTENDED]}
                 placeholder="Select certification level"
                 required
                 defaultValue={initialData?.cmmc_level?.toString()}
+                disabled={isSubmitting}
               />
               <Select
                 name="assessment_type"
                 label="Assessment Type *"
-                options={ASSESSMENT_TYPES}
+                options={[...ASSESSMENT_TYPES]}
                 placeholder="Select assessment type"
                 required
                 defaultValue={initialData?.assessment_type}
+                disabled={isSubmitting}
               />
               <Input
                 name="certification_date"

@@ -1,7 +1,20 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Card } from '@/components/ui/Card'
+import { FAQPageJsonLd } from '@/components/seo/JsonLd'
+import { SUBSCRIPTION_PRICE, SUPPORT_EMAIL } from '@/constants'
 
+export const metadata: Metadata = {
+  title: 'Frequently Asked Questions',
+  description: 'Find answers to common questions about CMMC Directory, certification requirements, and how to list your company.',
+  openGraph: {
+    title: 'FAQ - CMMC Directory',
+    description: 'Find answers to common questions about CMMC Directory and certification.',
+  },
+}
+
+// Single source of truth for FAQ data
 const faqs = [
   {
     category: 'About CMMC Directory',
@@ -16,7 +29,7 @@ const faqs = [
       },
       {
         q: 'How much does a subscription cost?',
-        a: 'Access to the CMMC Directory is $10 per month. This gives you unlimited access to search, filter, and view detailed information about all verified companies in our directory.',
+        a: `Access to the CMMC Directory is $${SUBSCRIPTION_PRICE} per month. This gives you unlimited access to search, filter, and view detailed information about all verified companies in our directory.`,
       },
     ],
   },
@@ -77,9 +90,15 @@ const faqs = [
   },
 ]
 
+// Generate flattened FAQ for JSON-LD from the single source of truth
+const allFaqQuestions = faqs.flatMap(section =>
+  section.questions.map(faq => ({ question: faq.q, answer: faq.a }))
+)
+
 export default function FAQPage() {
   return (
     <>
+      <FAQPageJsonLd questions={allFaqQuestions} />
       <Header />
       <main className="flex-1 bg-gray-50">
         {/* Hero Section */}
@@ -135,7 +154,7 @@ export default function FAQPage() {
                   Can&apos;t find the answer you&apos;re looking for? Our support team is here to help.
                 </p>
                 <a
-                  href="mailto:support@cmmcdirectory.com"
+                  href={`mailto:${SUPPORT_EMAIL}`}
                   className="inline-flex items-center px-6 py-3 bg-white text-accent font-semibold rounded hover:bg-gray-100 transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

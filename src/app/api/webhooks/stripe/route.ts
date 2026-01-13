@@ -1,46 +1,56 @@
 import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { getStripe } from '@/lib/stripe'
+import { stripe } from '@/lib/stripe'
 import { getUserByStripeCustomerId, updateUserById, upsertSubscription } from '@/lib/db'
 import { sendWelcomeEmail } from '@/lib/resend'
 
-interface StripeSubscription {
-  id: string
-  customer: string
-  status: string
-  items: { data: Array<{ price: { id: string } }> }
-  current_period_start: number
-  current_period_end: number
-  cancel_at_period_end: boolean
-  canceled_at: number | null
+// Helper to get customer ID from subscription (handles string or expanded object)
+function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustomer): string {
+  return typeof customer === 'string' ? customer : customer.id
 }
 
-function mapSubscriptionStatus(status: string): string {
-  const statusMap: Record<string, string> = {
-    active: 'active',
-    past_due: 'past_due',
-    canceled: 'canceled',
+// Helper to map Stripe status to our internal status
+function mapSubscriptionStatus(status: Stripe.Subscription.Status): string {
+  switch (status) {
+    case 'active':
+      return 'active'
+    case 'past_due':
+      return 'past_due'
+    case 'canceled':
+      return 'canceled'
+    default:
+      return 'inactive'
   }
-  return statusMap[status] || 'inactive'
 }
 
-async function handleSubscriptionChange(subscription: StripeSubscription) {
-  const user = await getUserByStripeCustomerId(subscription.customer)
-  if (!user) return
+async function handleSubscriptionChange(subscription: Stripe.Subscription) {
+  const customerId = getCustomerId(subscription.customer)
+  const user = await getUserByStripeCustomerId(customerId)
+
+  if (!user) {
+    return
+  }
+
+  const status = mapSubscriptionStatus(subscription.status)
+  const firstItem = subscription.items.data[0]
+
+  // Get period from subscription item (Stripe SDK v20+)
+  const periodEnd = firstItem?.current_period_end ?? subscription.billing_cycle_anchor
+  const periodStart = firstItem?.current_period_start ?? subscription.billing_cycle_anchor
 
   await updateUserById(user.id, {
-    subscriptionStatus: mapSubscriptionStatus(subscription.status),
-    subscriptionEndDate: new Date(subscription.current_period_end * 1000).toISOString(),
+    subscriptionStatus: status,
+    subscriptionEndDate: new Date(periodEnd * 1000).toISOString(),
   })
 
   await upsertSubscription({
     userId: user.id,
     stripeSubscriptionId: subscription.id,
-    stripePriceId: subscription.items.data[0].price.id,
+    stripePriceId: firstItem?.price.id ?? '',
     status: subscription.status,
-    currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+    currentPeriodStart: new Date(periodStart * 1000).toISOString(),
+    currentPeriodEnd: new Date(periodEnd * 1000).toISOString(),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
     canceledAt: subscription.canceled_at
       ? new Date(subscription.canceled_at * 1000).toISOString()
@@ -53,38 +63,51 @@ export async function POST(req: Request) {
   const headersList = await headers()
   const signature = headersList.get('stripe-signature')!
 
-  const stripe = getStripe()
   let event: Stripe.Event
+
   try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    )
   } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
   switch (event.type) {
     case 'customer.subscription.created': {
-      const subscriptionData = event.data.object as unknown as StripeSubscription
+      const subscription = event.data.object as Stripe.Subscription
+      const customerId = getCustomerId(subscription.customer)
+
       try {
-        const customer = await stripe.customers.retrieve(subscriptionData.customer)
+        const customer = await stripe.customers.retrieve(customerId)
         if (customer && !customer.deleted && customer.email) {
           await sendWelcomeEmail(customer.email, customer.name || 'there')
         }
       } catch {
-        // Email sending is non-critical
+        // Email sending failed - subscription still proceeds
       }
-      await handleSubscriptionChange(subscriptionData)
+
+      await handleSubscriptionChange(subscription)
       break
     }
 
-    case 'customer.subscription.updated':
-      await handleSubscriptionChange(event.data.object as unknown as StripeSubscription)
+    case 'customer.subscription.updated': {
+      const subscription = event.data.object as Stripe.Subscription
+      await handleSubscriptionChange(subscription)
       break
+    }
 
     case 'customer.subscription.deleted': {
-      const subscriptionData = event.data.object as unknown as StripeSubscription
-      const user = await getUserByStripeCustomerId(subscriptionData.customer)
+      const subscription = event.data.object as Stripe.Subscription
+      const customerId = getCustomerId(subscription.customer)
+      const user = await getUserByStripeCustomerId(customerId)
+
       if (user) {
-        await updateUserById(user.id, { subscriptionStatus: 'canceled' })
+        await updateUserById(user.id, {
+          subscriptionStatus: 'canceled',
+        })
       }
       break
     }
